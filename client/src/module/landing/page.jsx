@@ -20,6 +20,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { ShopkeeperAuth } from "./components/ShopkeeperAuth";
+import { ShopAccessModal } from "./components/ShopAccessModal";
 
 export function LandingPage() {
   return (
@@ -56,13 +57,7 @@ export function LandingPage() {
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <ShopkeeperAuth />
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto gap-2"
-            >
-              <ShoppingCart className="h-4 w-4" /> I'm a Customer
-            </Button>
+            <ShopAccessModal />
           </div>
         </div>
       </section>
