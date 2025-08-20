@@ -11,7 +11,8 @@ import { NearbyShopsPage } from "./module/customer/NearbyShops/page";
 import { ShopPage } from "./module/customer/shop/page";
 import { CartPage } from "./module/customer/cart/page";
 import { CheckoutPage } from "./module/customer/checkout/page";
-
+import { AboutPage } from "./module/landing/trust-pages/common";
+import { ContactPage, PrivacyPolicyPage, RefundPolicyPage, TermsConditionsPage } from "./module/landing/trust-pages/common";
 
 // Unused 
 // import { ShopAccessPage } from "./module/customer/shopAccess/page";
@@ -59,6 +60,13 @@ function App() {
           <Route path="/shop/dashboard" element={<ShopkeeperDashboard />} />
           <Route path="/shop/orders" element={<OrdersPage />} />
           <Route path="/shop/products" element={<ProductsPage />} />
+
+          {/* Trust Pages */}
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsConditionsPage />} />
 
           {/* 404 Fallback (optional) */}
           <Route path="*" element={<h1>404 - Page Not Found</h1>} />

@@ -21,8 +21,11 @@ import {
 } from "lucide-react";
 import { ShopkeeperAuth } from "./components/ShopkeeperAuth";
 import { ShopAccessModal } from "./components/ShopAccessModal";
+import { useNavigate } from "react-router-dom";
 
 export function LandingPage() {
+
+  const navigate = useNavigate()
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Navigation */}
@@ -280,6 +283,56 @@ export function LandingPage() {
                     className="text-muted-foreground p-0 h-auto"
                   >
                     FAQs
+                  </Button>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">General</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Button
+                    variant="link"
+                    className="text-muted-foreground p-0 h-auto"
+                    onClick={() => navigate("/about")}
+                  >
+                    About
+                  </Button>
+                </li>
+                <li>
+                  <Button
+                    variant="link"
+                    className="text-muted-foreground p-0 h-auto"
+                    onClick={() => navigate("/contact")}
+                  >
+                    Contact
+                  </Button>
+                </li>
+                <li>
+                  <Button
+                    variant="link"
+                    className="text-muted-foreground p-0 h-auto"
+                    onClick={() => navigate("/refund-policy")}
+                  >
+                    Refund Policy
+                  </Button>
+                </li>
+                <li>
+                  <Button
+                    variant="link"
+                    className="text-muted-foreground p-0 h-auto"
+                    onClick={() => navigate("/privacy-policy")}
+                  >
+                    Privacy Policy
+                  </Button>
+                </li>
+                <li>
+                  <Button
+                    variant="link"
+                    className="text-muted-foreground p-0 h-auto"
+                    onClick={() => navigate("/terms")}
+                  >
+                    Terms of Service
                   </Button>
                 </li>
               </ul>

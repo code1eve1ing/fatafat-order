@@ -259,7 +259,7 @@ export function ShopkeeperAuth() {
               Create a Free Account
             </Button>
 
-            <Button variant="outline" onClick={() => handleNavigate('/shopkeeper/dashboard')} className="w-full gap-2">
+            <Button variant="outline" onClick={() => handleNavigate('/shop/dashboard')} className="w-full gap-2">
               <UserRound className="h-4 w-4" />
               Continue as Guest
             </Button>
