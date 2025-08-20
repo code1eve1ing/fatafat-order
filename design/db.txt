@@ -1,0 +1,25 @@
+--- user ---
+
+id
+role_id {role}
+name
+email
+mobile
+password
+last_active
+created_at
+updated_at
+
+--- shop ---
+
+id
+owner_id {user}
+name
+location
+created_at
+updated_at
+
+--- role ---
+
+id
+name

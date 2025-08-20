@@ -40,11 +40,12 @@ import {
   ChevronLeft,
   ArrowLeft,
 } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 // Validation schema
 const formSchema = z.object({
-  shop_name: z.string().min(2, "Shop name is required"),
-  shop_owner_name: z.string().min(2, "Owner name is required"),
+  shop_name: z.string().min(1, "Shop name is required"),
+  shop_owner_name: z.string().min(1, "Owner name is required"),
   shop_category: z.string().min(1, "Shop category is required"),
   mobile: z
     .string()
@@ -56,6 +57,12 @@ const formSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters")
     .max(20, "Password too long"),
+  confirm_password: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .max(20, "Password too long")
+  ,
+
 });
 
 export function ShopOnboardingPage() {
@@ -63,15 +70,20 @@ export function ShopOnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [touchedFields, setTouchedFields] = useState(new Set());
+  const [searchParams] = useSearchParams();
+  const freeTrial = searchParams.get("free-trial");
+
+  const navigate = useNavigate();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    mode: "onChange", // Validate on change
+    mode: "onSubmit", // Validate on change
     defaultValues: {
       email: "",
       shop_category: "",
       mobile: "",
       password: "",
+      confirm_password: "",
       shop_name: "",
       shop_owner_name: "",
     },
@@ -126,6 +138,11 @@ export function ShopOnboardingPage() {
     },
   ];
 
+  if (freeTrial) {
+    steps.shift();
+    steps.pop();
+  }
+
   // Clear errors when moving between steps
   useEffect(() => {
     form.clearErrors();
@@ -134,14 +151,21 @@ export function ShopOnboardingPage() {
   const nextStep = async () => {
     const currentFields = steps[currentStep - 1].fields;
     const result = await trigger(currentFields);
+    if (!result) return;
 
-    if (result) {
-      if (currentStep === steps.length - 1) {
-        await handleSubmit();
-      } else {
-        setCurrentStep(currentStep + 1);
+    // Additional validation for password matching in step 3
+    if (steps[currentStep - 1].title === "Account Security") {
+      const { password, confirm_password } = form.getValues();
+      if (password && password !== confirm_password) {
+        form.setError('confirm_password', {
+          type: 'manual',
+          message: 'Passwords do not match'
+        });
+        return;
       }
+      await handleSubmit();
     }
+    setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -153,10 +177,10 @@ export function ShopOnboardingPage() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       const data = form.getValues();
-      console.log("Form data:", data);
-      setCurrentStep(currentStep + 1);
-
-      setPaymentSuccess(true);
+      alert("FORM submitted", JSON.stringify(data))
+      if (freeTrial) {
+        navigate('/shop/dashboard')
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -194,13 +218,12 @@ export function ShopOnboardingPage() {
               {steps.map((_, index) => (
                 <div
                   key={index}
-                  className={`h-2 w-8 rounded-full ${
-                    currentStep > index + 1
-                      ? "bg-primary"
-                      : currentStep === index + 1
+                  className={`h-2 w-8 rounded-full ${currentStep > index + 1
+                    ? "bg-primary"
+                    : currentStep === index + 1
                       ? "bg-primary/50"
                       : "bg-gray-200"
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -212,14 +235,14 @@ export function ShopOnboardingPage() {
         </CardHeader>
 
         <CardContent>
-          {currentStep <= steps.length - 1 ? (
+          {(currentStep <= steps.length - 1) || freeTrial ? (
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(nextStep)}
                 className="space-y-4"
               >
                 {/* Step 1: Shop Information */}
-                {currentStep === 1 && (
+                {steps[currentStep - 1].title === "Shop Information" && (
                   <>
                     <FormField
                       control={form.control}
@@ -304,7 +327,7 @@ export function ShopOnboardingPage() {
                 )}
 
                 {/* Step 2: Contact Details */}
-                {currentStep === 2 && (
+                {steps[currentStep - 1].title === "Contact Details" && (
                   <>
                     <FormField
                       control={form.control}
@@ -359,31 +382,57 @@ export function ShopOnboardingPage() {
                 )}
 
                 {/* Step 3: Account Security */}
-                {currentStep === 3 && (
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              placeholder="Create password (min 6 characters)"
-                              {...field}
-                              type="password"
-                              onChange={(e) => {
-                                field.onChange(e);
-                                handleInputChange("password")(e);
-                              }}
-                            />
-                            <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {steps[currentStep - 1].title === "Account Security" && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                placeholder="Create password"
+                                {...field}
+                                type="password"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  handleInputChange("password")(e);
+                                }}
+                              />
+                              <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="confirm_password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                placeholder="Confirm password"
+                                {...field}
+                                type="password"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  handleInputChange("confirm_password")(e);
+                                }}
+                              />
+                              <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
                 )}
               </form>
             </Form>
@@ -434,7 +483,7 @@ export function ShopOnboardingPage() {
             <div></div>
           )}
 
-          {currentStep <= steps.length - 1 ? (
+          {steps[currentStep - 1].title !== "Payment" ? (
             <Button
               onClick={nextStep}
               className="gap-2"
@@ -444,7 +493,7 @@ export function ShopOnboardingPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  {currentStep === steps.length - 1 ? "Submit" : "Next"}
+                  {steps[currentStep - 1].title === "Account Security" ? "Submit" : "Next"}
                   <ChevronRight className="h-4 w-4" />
                 </>
               )}

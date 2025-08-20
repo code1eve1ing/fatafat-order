@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Mail, Smartphone, Store, Sparkles, Key, Rocket } from "lucide-react";
+import { Loader2, Mail, Smartphone, Store, Sparkles, Key, Rocket, UserRound } from "lucide-react";
 
 // Validation schema
 const authSchema = z.object({
@@ -33,6 +33,7 @@ export function ShopkeeperAuth() {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState("options");
   const [isLoading, setIsLoading] = useState(false);
+
 
   const form = useForm({
     resolver: zodResolver(authSchema),
@@ -52,6 +53,11 @@ export function ShopkeeperAuth() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleNavigate = (path) => {
+    if (!path) return null;
+    navigate(path);
   };
 
   return (
@@ -214,7 +220,7 @@ export function ShopkeeperAuth() {
               </ul>
             </div>
 
-            <Button 
+            <Button
               className="w-full gap-2"
               onClick={() => navigate('/shop/onboarding')}
             >
@@ -248,9 +254,14 @@ export function ShopkeeperAuth() {
               </ul>
             </div>
 
-            <Button className="w-full gap-2">
+            <Button onClick={() => handleNavigate('/shop/onboarding?free-trial=true')} className="w-full gap-2">
               <Rocket className="h-4 w-4" />
-              Start Free Trial
+              Create a Free Account
+            </Button>
+
+            <Button variant="outline" onClick={() => handleNavigate('/shopkeeper/dashboard')} className="w-full gap-2">
+              <UserRound className="h-4 w-4" />
+              Continue as Guest
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
