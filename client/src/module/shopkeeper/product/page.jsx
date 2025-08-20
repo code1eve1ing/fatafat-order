@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Sidebar } from "../_common/Sidebar";
+import { AddProductModal } from "./_common/AddProduct";
 
 export function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,9 +97,7 @@ export function ProductsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" /> Add Product
-              </Button>
+              <AddProductModal />
             </div>
           </div>
           {/* Mobile Search - Only visible on small screens */}
