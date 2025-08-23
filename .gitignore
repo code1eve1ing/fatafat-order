@@ -1,2 +1,9 @@
 prompt
 ignore.zip
+design
+secret
+
+
+client/.env
+server/auth/.env
+server/auth/node_modules

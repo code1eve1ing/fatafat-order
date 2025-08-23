@@ -13,6 +13,7 @@ import { CartPage } from "./module/customer/cart/page";
 import { CheckoutPage } from "./module/customer/checkout/page";
 import { AboutPage } from "./module/landing/trust-pages/common";
 import { ContactPage, PrivacyPolicyPage, RefundPolicyPage, TermsConditionsPage } from "./module/landing/trust-pages/common";
+import { Toaster } from 'react-hot-toast';
 
 // Unused 
 // import { ShopAccessPage } from "./module/customer/shopAccess/page";
@@ -43,6 +44,31 @@ import { ContactPage, PrivacyPolicyPage, RefundPolicyPage, TermsConditionsPage }
 function App() {
   return (
     <>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'rgba(54,54,54,0.7)',
+            backdropFilter: 'blur(4px)',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#4ade80',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 5000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <Router>
         <Routes>
           {/* Landing */}

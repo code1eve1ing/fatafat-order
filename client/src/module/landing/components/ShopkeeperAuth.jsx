@@ -11,7 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -22,6 +21,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2, Mail, Smartphone, Store, Sparkles, Key, Rocket, UserRound } from "lucide-react";
+import useAuth from "@/hooks/useAuth";
+import Button from "@/components/common/Button";
 
 // Validation schema
 const authSchema = z.object({
@@ -32,7 +33,7 @@ const authSchema = z.object({
 export function ShopkeeperAuth() {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState("options");
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, loading } = useAuth();
 
 
   const form = useForm({
@@ -44,15 +45,8 @@ export function ShopkeeperAuth() {
   });
 
   const onSubmit = async (data) => {
-    setIsLoading(true);
-    try {
-      // TODO: Implement auth API call
-      console.log("Auth data:", data);
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-    } finally {
-      setIsLoading(false);
-    }
+    await login(data);
+    navigate('/shop/dashboard');
   };
 
   const handleNavigate = (path) => {
@@ -187,10 +181,7 @@ export function ShopkeeperAuth() {
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
+              <Button type="submit" className="w-full" loading={loading}>
                 Login
               </Button>
 
