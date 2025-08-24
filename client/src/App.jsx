@@ -14,6 +14,7 @@ import { CheckoutPage } from "./module/customer/checkout/page";
 import { AboutPage } from "./module/landing/trust-pages/common";
 import { ContactPage, PrivacyPolicyPage, RefundPolicyPage, TermsConditionsPage } from "./module/landing/trust-pages/common";
 import { Toaster } from 'react-hot-toast';
+import InitialRouteHandler from "./components/wrappers/InitialRouteHandler";
 
 // Unused 
 // import { ShopAccessPage } from "./module/customer/shopAccess/page";
@@ -70,33 +71,35 @@ function App() {
         }}
       />
       <Router>
-        <Routes>
-          {/* Landing */}
-          <Route path="/" element={<LandingPage />} />
+        <InitialRouteHandler>
+          <Routes>
+            {/* Landing */}
+            <Route path="/" element={<LandingPage />} />
 
-          {/* Customer Routes */}
-          <Route path="/customer/nearby-shops" element={<NearbyShopsPage />} />
-          {/* TODO: shop login/registration reminder popup & view cart floaring icon  */}
-          <Route path="/customer/shop/:shopId" element={<ShopPage />} />
-          <Route path="/customer/cart" element={<CartPage />} />
-          <Route path="/customer/checkout" element={<CheckoutPage />} />
+            {/* Customer Routes */}
+            <Route path="/customer/nearby-shops" element={<NearbyShopsPage />} />
+            {/* TODO: shop login/registration reminder popup & view cart floaring icon  */}
+            <Route path="/customer/shop/:shopId" element={<ShopPage />} />
+            <Route path="/customer/cart" element={<CartPage />} />
+            <Route path="/customer/checkout" element={<CheckoutPage />} />
 
-          {/* Shopkeeper Routes */}
-          <Route path="/shop/onboarding" element={<ShopOnboardingPage />} />
-          <Route path="/shop/dashboard" element={<ShopkeeperDashboard />} />
-          <Route path="/shop/orders" element={<OrdersPage />} />
-          <Route path="/shop/products" element={<ProductsPage />} />
+            {/* Shopkeeper Routes */}
+            <Route path="/shop/onboarding" element={<ShopOnboardingPage />} />
+            <Route path="/shop/dashboard" element={<ShopkeeperDashboard />} />
+            <Route path="/shop/orders" element={<OrdersPage />} />
+            <Route path="/shop/products" element={<ProductsPage />} />
 
-          {/* Trust Pages */}
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/refund-policy" element={<RefundPolicyPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/terms" element={<TermsConditionsPage />} />
+            {/* Trust Pages */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/refund-policy" element={<RefundPolicyPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsConditionsPage />} />
 
-          {/* 404 Fallback (optional) */}
-          <Route path="*" element={<h1>404 - Page Not Found</h1>} />
-        </Routes>
+            {/* 404 Fallback (optional) */}
+            <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+          </Routes>
+        </InitialRouteHandler>
       </Router>
     </>
   );

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Store, MapPin, ChevronRight, User, HelpCircle } from "lucide-react";
 import { LoginRegisterPopup } from "../_common/LoginRegisterPopup";
 import { FloatingChat } from "../_common/FloatingChat";
+import Logo from "@/components/common/Logo";
 
 export function NearbyShopsPage() {
     const navigate = useNavigate();
@@ -76,9 +77,7 @@ export function NearbyShopsPage() {
             <header className="bg-white shadow-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-                            FO
-                        </div>
+                        <Logo />
                     </div>
 
                     <div className="flex items-center space-x-4">

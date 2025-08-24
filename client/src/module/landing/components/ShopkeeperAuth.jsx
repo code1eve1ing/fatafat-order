@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Mail, Smartphone, Store, Sparkles, Key, Rocket, UserRound } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import Button from "@/components/common/Button";
+import { FREE_TRIAL } from "@/lib/constants/user";
 
 // Validation schema
 const authSchema = z.object({
@@ -250,7 +251,10 @@ export function ShopkeeperAuth() {
               Create a Free Account
             </Button>
 
-            <Button variant="outline" onClick={() => handleNavigate('/shop/dashboard')} className="w-full gap-2">
+            <Button variant="outline" onClick={() => {
+              localStorage.setItem('accountType', FREE_TRIAL);
+              handleNavigate('/shop/dashboard')
+            }} className="w-full gap-2">
               <UserRound className="h-4 w-4" />
               Continue as Guest
             </Button>

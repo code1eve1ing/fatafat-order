@@ -90,6 +90,18 @@ class AuthService {
         const userData = localStorage.getItem('userData');
         return userData ? JSON.parse(userData) : null;
     }
+
+    isAuthCompleted() {
+        const token = localStorage.getItem('token');
+        return !!token;
+    }
+
+    getAccountType() {
+        const accountType = localStorage.getItem('accountType');
+        return accountType;
+    }
+
+
 }
 
 export default new AuthService();

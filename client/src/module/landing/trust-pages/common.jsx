@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { MessageCircle, Mail, MapPin, Phone, Shield, RefreshCw, Heart, FileText, Scale, AlertTriangle, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Logo from "@/components/common/Logo";
 
 export function AboutPage() {
     const navigate = useNavigate()
@@ -14,9 +15,7 @@ export function AboutPage() {
             {/* Navigation - Same as landing page */}
             <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-                        FO
-                    </div>
+                    <Logo />
                     <span className="text-xl font-bold text-primary">Fatafat Order</span>
                 </div>
                 <div className="flex space-x-4">
@@ -154,9 +153,7 @@ export function ContactPage() {
             {/* Navigation */}
             <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-                        FO
-                    </div>
+                    <Logo />
                     <span className="text-xl font-bold text-primary">Fatafat Order</span>
                 </div>
                 <div className="flex space-x-4">
@@ -315,9 +312,7 @@ export function PrivacyPolicyPage() {
             {/* Navigation */}
             <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-                        FO
-                    </div>
+                    <Logo />
                     <span className="text-xl font-bold text-primary">Fatafat Order</span>
                 </div>
                 <div className="flex space-x-4">
@@ -443,9 +438,7 @@ export function RefundPolicyPage() {
             {/* Navigation */}
             <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-                        FO
-                    </div>
+                    <Logo />
                     <span className="text-xl font-bold text-primary">Fatafat Order</span>
                 </div>
                 <div className="flex space-x-4">
@@ -564,9 +557,7 @@ export function TermsConditionsPage() {
             {/* Navigation */}
             <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-                        FO
-                    </div>
+                    <Logo />
                     <span className="text-xl font-bold text-primary">Fatafat Order</span>
                 </div>
                 <div className="flex space-x-4">
