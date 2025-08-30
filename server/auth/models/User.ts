@@ -27,6 +27,7 @@ const userSchema: Schema = new Schema({
     },
     email: {
         type: String,
+        unique: true,
         sparse: true,
         validate: {
             validator: function (v: string) {
@@ -75,7 +76,7 @@ userSchema.methods.comparePassword = async function (candidatePassword: string):
     return bcrypt.compare(candidatePassword, this.password);
 };
 
-userSchema.index({ mobile: 1 });
+// Email index is defined here with sparse: true to allow multiple null values
 userSchema.index({ email: 1 }, { sparse: true });
 
 export default mongoose.model<IUser>('User', userSchema);
