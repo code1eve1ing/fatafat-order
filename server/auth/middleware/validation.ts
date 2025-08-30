@@ -1,4 +1,4 @@
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
 
 export const validateSignup = [
     body('mobile')
@@ -43,4 +43,19 @@ export const validateResendOTP = [
         .withMessage('Mobile must be 10 digits')
         .isNumeric()
         .withMessage('Mobile must contain only numbers')
+];
+
+export const validateCategory = [
+    body('name')
+        .trim()
+        .notEmpty()
+        .withMessage('Category name is required')
+        .isLength({ max: 50 })
+        .withMessage('Category name cannot exceed 50 characters')
+];
+
+export const validateCategoryId = [
+    param('id')
+        .isMongoId()
+        .withMessage('Invalid category ID format')
 ];

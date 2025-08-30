@@ -13,18 +13,21 @@ const InitialRouteHandler = ({ children }) => {
     useEffect(() => {
         setTimeout(() => {
             // TODO: make this smarter
-            if (accountType === FREE_TRIAL) {
+            if (accountType === FREE_TRIAL && !window.location.pathname.includes('shop')) {
                 navigate('/shop/dashboard');
                 // TODO: load details of user...
                 setTimeout(() => {
                     setHasLoaded(true);
                 }, 500);
             } else {
-                navigate('/')
-                setTimeout(() => {
-                    setHasLoaded(true);
-                }, 500);
+                setHasLoaded(true);
+
+                // navigate('/')
+                // setTimeout(() => {
+                //     setHasLoaded(true);
+                // }, 500);
             }
+
         }, 1000);
     }, [accountType])
 

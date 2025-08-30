@@ -246,17 +246,17 @@ export function ShopkeeperAuth() {
               </ul>
             </div>
 
-            <Button onClick={() => handleNavigate('/shop/onboarding?free-trial=true')} className="w-full gap-2">
+            {/* <Button onClick={() => handleNavigate('/shop/onboarding?free-trial=true')} className="w-full gap-2">
               <Rocket className="h-4 w-4" />
               Create a Free Account
-            </Button>
+            </Button> */}
 
-            <Button variant="outline" onClick={() => {
+            <Button onClick={() => {
               localStorage.setItem('accountType', FREE_TRIAL);
               handleNavigate('/shop/dashboard')
             }} className="w-full gap-2">
-              <UserRound className="h-4 w-4" />
-              Continue as Guest
+              <Rocket className="h-4 w-4" />
+              Start Free Trial
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">

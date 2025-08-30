@@ -15,6 +15,9 @@ import { AboutPage } from "./module/landing/trust-pages/common";
 import { ContactPage, PrivacyPolicyPage, RefundPolicyPage, TermsConditionsPage } from "./module/landing/trust-pages/common";
 import { Toaster } from 'react-hot-toast';
 import InitialRouteHandler from "./components/wrappers/InitialRouteHandler";
+import { CategoriesPage } from "./module/admin/category/page";
+import InitialDataLoader from "./components/common/InitialDataLoader";
+import ShopkeeperManager from "./module/shopkeeper/wrappers/ShopkeeperManager";
 
 // Unused 
 // import { ShopAccessPage } from "./module/customer/shopAccess/page";
@@ -84,10 +87,10 @@ function App() {
             <Route path="/customer/checkout" element={<CheckoutPage />} />
 
             {/* Shopkeeper Routes */}
-            <Route path="/shop/onboarding" element={<ShopOnboardingPage />} />
-            <Route path="/shop/dashboard" element={<ShopkeeperDashboard />} />
-            <Route path="/shop/orders" element={<OrdersPage />} />
-            <Route path="/shop/products" element={<ProductsPage />} />
+            <Route path="/shop/onboarding" element={<ShopkeeperManager><ShopOnboardingPage /></ShopkeeperManager>} />
+            <Route path="/shop/dashboard" element={<ShopkeeperManager><ShopkeeperDashboard /></ShopkeeperManager>} />
+            <Route path="/shop/orders" element={<ShopkeeperManager><OrdersPage /></ShopkeeperManager>} />
+            <Route path="/shop/products" element={<ShopkeeperManager><ProductsPage /></ShopkeeperManager>} />
 
             {/* Trust Pages */}
             <Route path="/about" element={<AboutPage />} />
@@ -96,11 +99,17 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/terms" element={<TermsConditionsPage />} />
 
+
+            {/* Admin Pages  */}
+            <Route path="/admin/categories" element={<CategoriesPage />} />
+
             {/* 404 Fallback (optional) */}
             <Route path="*" element={<h1>404 - Page Not Found</h1>} />
           </Routes>
         </InitialRouteHandler>
       </Router>
+
+      <InitialDataLoader />
     </>
   );
 }

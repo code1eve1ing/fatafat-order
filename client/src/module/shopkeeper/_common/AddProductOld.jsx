@@ -154,20 +154,25 @@ export function AddProductModal() {
         form.setValue("weight", watchIsWeightBased ? 0 : undefined);
     }, [watchIsWeightBased])
 
+    const _ = {
+        BUTTON_TEXT: "Add Menu Item",
+        DIALOG_TITLE: "Add New Menu Item",
+        DIALOG_DESCRIPTION: "Fill in the details below to add a new menu item to your shop"
+    }
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button className="gap-2">
-                    <Plus className="h-4 w-4" /> Add Product
+                    <Plus className="h-4 w-4" /> {_.BUTTON_TEXT}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-0">
                 <div className="sticky top-0 bg-white z-10 border-b p-4">
                     <DialogHeader>
-                        <DialogTitle className="text-xl">Add New Product</DialogTitle>
+                        <DialogTitle className="text-xl">{_.DIALOG_TITLE}</DialogTitle>
                         <DialogDescription>
-                            Fill in the details below to add a new product to your inventory
+                            {_.DIALOG_DESCRIPTION}
                         </DialogDescription>
                     </DialogHeader>
                 </div>

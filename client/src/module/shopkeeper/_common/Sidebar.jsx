@@ -27,7 +27,7 @@ export function Sidebar() {
         )}
         {/* Mobile Navigation Button */}
         <button
-            className="md:hidden fixed top-[15px] left-4 z-50 p-2 rounded-md bg-white shadow-md"
+            className="md:hidden fixed top-[12px] left-4 z-50 p-2 rounded-md bg-white shadow-md"
             onClick={() => setSidebarOpen(!sidebarOpen)}
         >
             {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
