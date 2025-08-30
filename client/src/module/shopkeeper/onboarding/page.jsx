@@ -20,7 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import Button from "@/components/common/button";
+import Button from "@/components/common/Button";
 import {
   Select,
   SelectContent,
