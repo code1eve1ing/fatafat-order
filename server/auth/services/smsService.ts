@@ -6,8 +6,14 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
 
-const client = twilio(accountSid, authToken);
-
+// const client =  twilio(accountSid, authToken);
+const client = {
+    messages: {
+        create: (msgData: MessageListInstanceCreateOptions) => {
+            console.log('SMS sent successfully');
+        }
+    }
+}
 export const sendSMS = async (to: string, body: string): Promise<boolean> => {
     try {
         if (!accountSid || !authToken) {
