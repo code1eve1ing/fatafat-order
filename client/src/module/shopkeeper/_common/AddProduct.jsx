@@ -149,7 +149,7 @@ export function AddProductModal({ variant = "default", linkText, data, isEdit, h
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 {variant === 'hidden' ? null : variant === "link" ? (
-                    <span className="flex items-center gap-2"> {linkText || _.BUTTON_TEXT}</span>
+                    <span className="underline"> {linkText || _.BUTTON_TEXT}</span>
                 ) : (
                     <Button className="gap-2">
                         <Plus className="h-4 w-4" /> <span className="hidden md:inline">{_.BUTTON_TEXT}</span>
