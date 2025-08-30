@@ -13,6 +13,11 @@ import { CartPage } from "./module/customer/cart/page";
 import { CheckoutPage } from "./module/customer/checkout/page";
 import { AboutPage } from "./module/landing/trust-pages/common";
 import { ContactPage, PrivacyPolicyPage, RefundPolicyPage, TermsConditionsPage } from "./module/landing/trust-pages/common";
+import { Toaster } from 'react-hot-toast';
+import InitialRouteHandler from "./components/wrappers/InitialRouteHandler";
+import { CategoriesPage } from "./module/admin/category/page";
+import InitialDataLoader from "./components/common/InitialDataLoader";
+import ShopkeeperManager from "./module/shopkeeper/wrappers/ShopkeeperManager";
 
 // Unused 
 // import { ShopAccessPage } from "./module/customer/shopAccess/page";
@@ -43,35 +48,68 @@ import { ContactPage, PrivacyPolicyPage, RefundPolicyPage, TermsConditionsPage }
 function App() {
   return (
     <>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'rgba(54,54,54,0.7)',
+            backdropFilter: 'blur(4px)',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#4ade80',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 5000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <Router>
-        <Routes>
-          {/* Landing */}
-          <Route path="/" element={<LandingPage />} />
+        <InitialRouteHandler>
+          <Routes>
+            {/* Landing */}
+            <Route path="/" element={<LandingPage />} />
 
-          {/* Customer Routes */}
-          <Route path="/customer/nearby-shops" element={<NearbyShopsPage />} />
-          {/* TODO: shop login/registration reminder popup & view cart floaring icon  */}
-          <Route path="/customer/shop/:shopId" element={<ShopPage />} />
-          <Route path="/customer/cart" element={<CartPage />} />
-          <Route path="/customer/checkout" element={<CheckoutPage />} />
+            {/* Customer Routes */}
+            <Route path="/customer/nearby-shops" element={<NearbyShopsPage />} />
+            {/* TODO: shop login/registration reminder popup & view cart floaring icon  */}
+            <Route path="/customer/shop/:shopId" element={<ShopPage />} />
+            <Route path="/customer/cart" element={<CartPage />} />
+            <Route path="/customer/checkout" element={<CheckoutPage />} />
 
-          {/* Shopkeeper Routes */}
-          <Route path="/shop/onboarding" element={<ShopOnboardingPage />} />
-          <Route path="/shop/dashboard" element={<ShopkeeperDashboard />} />
-          <Route path="/shop/orders" element={<OrdersPage />} />
-          <Route path="/shop/products" element={<ProductsPage />} />
+            {/* Shopkeeper Routes */}
+            <Route path="/shop/onboarding" element={<ShopkeeperManager><ShopOnboardingPage /></ShopkeeperManager>} />
+            <Route path="/shop/dashboard" element={<ShopkeeperManager><ShopkeeperDashboard /></ShopkeeperManager>} />
+            <Route path="/shop/orders" element={<ShopkeeperManager><OrdersPage /></ShopkeeperManager>} />
+            <Route path="/shop/products" element={<ShopkeeperManager><ProductsPage /></ShopkeeperManager>} />
 
-          {/* Trust Pages */}
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/refund-policy" element={<RefundPolicyPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/terms" element={<TermsConditionsPage />} />
+            {/* Trust Pages */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/refund-policy" element={<RefundPolicyPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsConditionsPage />} />
 
-          {/* 404 Fallback (optional) */}
-          <Route path="*" element={<h1>404 - Page Not Found</h1>} />
-        </Routes>
+
+            {/* Admin Pages  */}
+            <Route path="/admin/categories" element={<CategoriesPage />} />
+
+            {/* 404 Fallback (optional) */}
+            <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+          </Routes>
+        </InitialRouteHandler>
       </Router>
+
+      <InitialDataLoader />
     </>
   );
 }

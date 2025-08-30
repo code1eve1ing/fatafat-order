@@ -1,3 +1,4 @@
+import Logo from "@/components/common/Logo";
 import { Button } from "@/components/ui/button";
 import {
     Calendar,
@@ -26,7 +27,7 @@ export function Sidebar() {
         )}
         {/* Mobile Navigation Button */}
         <button
-            className="md:hidden fixed top-[15px] left-4 z-50 p-2 rounded-md bg-white shadow-md"
+            className="md:hidden fixed top-[12px] left-4 z-50 p-2 rounded-md bg-white shadow-md"
             onClick={() => setSidebarOpen(!sidebarOpen)}
         >
             {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -37,9 +38,7 @@ export function Sidebar() {
                  ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
             } md:translate-x-0 transition-transform duration-200 ease-in-out z-40`}
         >
-            <div className="absolute bottom-2 left-2 w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-                FO
-            </div>
+            <Logo className="absolute bottom-2 left-2" />
             <div className="p-5 border-b border-gray-200">
                 <div className="flex items-center space-x-2">
                     <span className="text-xl font-bold ml-12">My Shop</span>

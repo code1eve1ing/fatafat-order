@@ -22,6 +22,7 @@ import {
 import { ShopkeeperAuth } from "./components/ShopkeeperAuth";
 import { ShopAccessModal } from "./components/ShopAccessModal";
 import { useNavigate } from "react-router-dom";
+import Logo from "@/components/common/Logo";
 
 export function LandingPage() {
 
@@ -31,9 +32,7 @@ export function LandingPage() {
       {/* Navigation */}
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-            FO
-          </div>
+          <Logo />
           <span className="text-xl font-bold text-primary">Fatafat Order</span>
         </div>
         <div className="hidden md:flex space-x-6">
@@ -218,9 +217,7 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-                  FO
-                </div>
+                <Logo />
                 <span className="text-xl font-bold text-primary">
                   Fatafat Order
                 </span>

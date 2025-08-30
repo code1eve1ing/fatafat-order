@@ -20,7 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/common/button";
 import {
   Select,
   SelectContent,
@@ -41,6 +41,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import useAuth from "@/hooks/useAuth";
 
 // Validation schema
 const formSchema = z.object({
@@ -72,6 +73,7 @@ export function ShopOnboardingPage() {
   const [touchedFields, setTouchedFields] = useState(new Set());
   const [searchParams] = useSearchParams();
   const freeTrial = searchParams.get("free-trial");
+  const { signup, loading } = useAuth();
 
   const navigate = useNavigate();
 
@@ -173,28 +175,18 @@ export function ShopOnboardingPage() {
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const data = form.getValues();
-      alert("FORM submitted", JSON.stringify(data))
-      if (freeTrial) {
-        navigate('/shop/dashboard')
-      }
-    } finally {
-      setIsSubmitting(false);
+    let data = form.getValues();
+    if (freeTrial) {
+      const { mobile, email, password } = data
+      data = { mobile, email: email || undefined, password }
     }
+    await signup(data);
+    navigate('/shop/dashboard')
   };
 
   const handlePayment = async () => {
-    setIsSubmitting(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("Payment successful");
-      window.location.href = "/shop/dashboard";
-    } finally {
-      setIsSubmitting(false);
-    }
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    window.location.href = "/shop/dashboard";
   };
 
   return (
@@ -487,22 +479,19 @@ export function ShopOnboardingPage() {
             <Button
               onClick={nextStep}
               className="gap-2"
-              disabled={isSubmitting}
+              loading={loading}
             >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  {steps[currentStep - 1].title === "Account Security" ? "Submit" : "Next"}
-                  <ChevronRight className="h-4 w-4" />
-                </>
-              )}
+              <>
+                {steps[currentStep - 1].title === "Account Security" ? "Submit" : "Next"}
+                {steps[currentStep - 1].title !== "Account Security" ? <ChevronRight className="h-4 w-4" /> : null}
+
+              </>
             </Button>
           ) : (
             <Button
               onClick={handlePayment}
               className="w-full gap-2"
-              disabled={isSubmitting}
+              loading={isSubmitting}
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
