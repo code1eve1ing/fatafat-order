@@ -8,9 +8,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { Plus, ChevronLeft, ShoppingCart, Check, Search, Trash2, Eye, EyeOff, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  ChevronLeft,
+  ShoppingCart,
+  Search,
+  Trash2,
+  ChevronRight,
+} from "lucide-react";
 import useShopkeeperStore from "@/store/shopkeeper";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,13 +40,12 @@ export function OrderModal({ variant = "default", linkText }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSectionId, setSelectedSectionId] = useState(null);
 
-
   const { getProducts, getMenuSections, addOrder } = useShopkeeperStore();
   const products = getProducts(searchQuery, selectedSectionId);
   const sections = getMenuSections();
 
   const _ = {
-    BUTTON_TEXT: "",
+    BUTTON_TEXT: "Add New Order",
     DIALOG_TITLE: "Create New Order",
     DIALOG_DESCRIPTION: "Select products and create a new order",
   };
@@ -48,11 +53,11 @@ export function OrderModal({ variant = "default", linkText }) {
   // TODO: truncate text
 
   const handleProductSelect = (product) => {
-    setSelectedProducts(prev => {
-      const existingIndex = prev.findIndex(p => p._id === product._id);
+    setSelectedProducts((prev) => {
+      const existingIndex = prev.findIndex((p) => p._id === product._id);
       if (existingIndex >= 0) {
         // If product already selected, remove it
-        return prev.filter(p => p._id !== product._id);
+        return prev.filter((p) => p._id !== product._id);
       } else {
         // Add product with quantity 1
         return [...prev, { ...product, quantity: 1 }];
@@ -61,14 +66,14 @@ export function OrderModal({ variant = "default", linkText }) {
   };
 
   const handleSelect = (value) => {
-    setSelectedSectionId(value === "all" ? null : value)
-  }
+    setSelectedSectionId(value === "all" ? null : value);
+  };
 
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity < 1) return;
 
-    setSelectedProducts(prev =>
-      prev.map(product =>
+    setSelectedProducts((prev) =>
+      prev.map((product) =>
         product._id === productId
           ? { ...product, quantity: newQuantity }
           : product
@@ -77,14 +82,16 @@ export function OrderModal({ variant = "default", linkText }) {
   };
 
   const removeProduct = (productId) => {
-    const confirm = window.confirm("Are you sure you want to remove this product?")
+    const confirm = window.confirm(
+      "Are you sure you want to remove this product?"
+    );
     if (!confirm) return;
-    setSelectedProducts(prev => prev.filter(p => p._id !== productId));
+    setSelectedProducts((prev) => prev.filter((p) => p._id !== productId));
   };
 
   const calculateTotal = () => {
     return selectedProducts.reduce((total, product) => {
-      return total + (product.price * product.quantity);
+      return total + product.price * product.quantity;
     }, 0);
   };
 
@@ -92,22 +99,20 @@ export function OrderModal({ variant = "default", linkText }) {
     // Here you would typically save the order to your store/service
     const now = moment();
     const orderDetails = {
-      items: selectedProducts.map(p => ({
+      items: selectedProducts.map((p) => ({
         ...p,
-        sectionName: sections.find(s => s._id === p.section)?.name
+        sectionName: sections.find((s) => s._id === p.section)?.name,
       })),
       status: orderStatus,
       totalAmount: calculateTotal(),
       notes,
       date: now.format("DD-MM-YYYY"),
-      time: now.format("HH-mm")
-    }
+      time: now.format("HH-mm"),
+    };
     shopkeeperService.saveOrder(orderDetails, (order) => {
-      addOrder(order)
+      addOrder(order);
       console.log("Order saved:", order);
-
-    })
-
+    });
 
     // Reset and close
     setSelectedProducts([]);
@@ -133,12 +138,11 @@ export function OrderModal({ variant = "default", linkText }) {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {variant === "link" ? (
-          <span className="underline">
-            {linkText || _.BUTTON_TEXT}
-          </span>
+          <span className="underline">{linkText || _.BUTTON_TEXT}</span>
         ) : (
           <Button className="gap-2">
-            <Plus className="h-4 w-4" /> {_.BUTTON_TEXT}
+            <Plus className="h-4 w-4" />{" "}
+            <span className="hidden md:inline">{_.BUTTON_TEXT}</span>
           </Button>
         )}
       </DialogTrigger>
@@ -153,7 +157,6 @@ export function OrderModal({ variant = "default", linkText }) {
           <div className="space-y-4 p-4 flex flex-col h-[90vh] overflow-hidden">
             {/* Search and Toggle */}
             <div className="flex flex-col gap-2">
-
               <div className="flex-1 bg-white ">
                 {/* <Button variant="outline" className="w-full justify-between" onClick={() => setIsOpen(true)}>
                     All Categories <ChevronDown className="ml-2 h-4 w-4" />
@@ -181,36 +184,45 @@ export function OrderModal({ variant = "default", linkText }) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <span className='border-b pb-2 pt-0.5 text-sm text-gray-500'>{_.DIALOG_DESCRIPTION}</span>
+              <span className="border-b pb-2 pt-0.5 text-sm text-gray-500">
+                {_.DIALOG_DESCRIPTION}
+              </span>
             </div>
 
             {/* Products Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-1 overflow-y-auto overflow-x-hidden">
-
               {products.map((product) => {
-                const isSelected = selectedProducts.some(p => p._id === product._id);
-                const selectedProduct = isSelected ? selectedProducts.find(p => p._id === product._id) : null;
+                const isSelected = selectedProducts.some(
+                  (p) => p._id === product._id
+                );
+                const selectedProduct = isSelected
+                  ? selectedProducts.find((p) => p._id === product._id)
+                  : null;
 
                 return (
                   <div
                     key={product._id}
                     className={`border rounded-lg py-2 px-3 h-fit cursor-pointer transition-all duration-200 flex justify-between ${isSelected
-                      ? "border-1 border-green-300 bg-green-50/50"
-                      : "border-gray-200"
+                        ? "border-1 border-green-300 bg-green-50/50"
+                        : "border-gray-200"
                       }`}
                     onClick={() => handleProductSelect(product)}
                   >
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-700 truncate">{product.name}</h3>
+                      <h3 className="font-medium text-gray-700 truncate">
+                        {product.name}
+                      </h3>
                       <p className="text-xs text-gray-500">
-
                         ₹{product.price}
-                        {
-                          selectedProduct?.quantity > 1 ? <> x {selectedProduct.quantity} = ₹{product.price * selectedProduct.quantity}</> : null
-                        }
+                        {selectedProduct?.quantity > 1 ? (
+                          <>
+                            {" "}
+                            x {selectedProduct.quantity} = ₹
+                            {product.price * selectedProduct.quantity}
+                          </>
+                        ) : null}
                         {/* {(product.price * selectedProduct?.quantity).toFixed(2)} */}
                       </p>
-
                     </div>
 
                     {/* {isSelected ? (
@@ -225,15 +237,21 @@ export function OrderModal({ variant = "default", linkText }) {
                           size="sm"
                           className="h-7 w-7 p-0"
                           onClick={(e) => {
-                            updateQuantity(product._id, selectedProduct.quantity - 1)
+                            updateQuantity(
+                              product._id,
+                              selectedProduct.quantity - 1
+                            );
                             if (selectedProduct.quantity > 1) {
-                              e.stopPropagation()
+                              e.stopPropagation();
                             }
                           }}
                         >
                           -
                         </Button>
-                        <span className="w-8 text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+                        <span
+                          className="w-8 text-center text-sm font-medium"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {selectedProduct.quantity}
                         </span>
                         <Button
@@ -241,8 +259,11 @@ export function OrderModal({ variant = "default", linkText }) {
                           size="sm"
                           className="h-7 w-7 p-0"
                           onClick={(e) => {
-                            updateQuantity(product._id, selectedProduct.quantity + 1)
-                            e.stopPropagation()
+                            updateQuantity(
+                              product._id,
+                              selectedProduct.quantity + 1
+                            );
+                            e.stopPropagation();
                           }}
                         >
                           +
@@ -272,7 +293,8 @@ export function OrderModal({ variant = "default", linkText }) {
               <div className="border-t pt-4 mt-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    {selectedProducts.length} product{selectedProducts.length !== 1 ? 's' : ''} selected
+                    {selectedProducts.length} product
+                    {selectedProducts.length !== 1 ? "s" : ""} selected
                   </span>
                   <Button onClick={() => setCurrentStep(2)}>
                     Next <ChevronRight className=" h-4 w-4" />
@@ -293,7 +315,6 @@ export function OrderModal({ variant = "default", linkText }) {
             </Button>
 
             <div className="space-y-4 w-full">
-
               <Textarea
                 id="notes"
                 placeholder="Notes..."
@@ -310,13 +331,20 @@ export function OrderModal({ variant = "default", linkText }) {
                 {selectedProducts.map((product) => (
                   <div key={product._id} className="flex justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-700 truncate">{product.name}</h3>
+                      <h3 className="font-medium text-gray-700 truncate">
+                        {product.name}
+                      </h3>
                       <p className="text-xs text-gray-500">
-
                         ₹{product.price}
-                        {
-                          product.quantity > 1 ? <> x {product.quantity} = <span className="font-medium text-gray-600">₹{product.price * product.quantity}</span></> : null
-                        }
+                        {product.quantity > 1 ? (
+                          <>
+                            {" "}
+                            x {product.quantity} ={" "}
+                            <span className="font-medium text-gray-600">
+                              ₹{product.price * product.quantity}
+                            </span>
+                          </>
+                        ) : null}
                         {/* {(product.price * selectedProduct?.quantity).toFixed(2)} */}
                       </p>
                     </div>
@@ -325,16 +353,22 @@ export function OrderModal({ variant = "default", linkText }) {
                         variant="outline"
                         size="sm"
                         className="h-5 w-5 p-0"
-                        onClick={() => updateQuantity(product._id, product.quantity - 1)}
+                        onClick={() =>
+                          updateQuantity(product._id, product.quantity - 1)
+                        }
                       >
                         -
                       </Button>
-                      <span className="w-4 text-center text-sm font-medium">{product.quantity}</span>
+                      <span className="w-4 text-center text-sm font-medium">
+                        {product.quantity}
+                      </span>
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-5 w-5 p-0"
-                        onClick={() => updateQuantity(product._id, product.quantity + 1)}
+                        onClick={() =>
+                          updateQuantity(product._id, product.quantity + 1)
+                        }
                       >
                         +
                       </Button>
@@ -348,15 +382,10 @@ export function OrderModal({ variant = "default", linkText }) {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="flex items-center gap-2">
-
-                    </div>
-
-
+                    <div className="flex items-center gap-2"></div>
                   </div>
                 ))}
               </div>
-
             </div>
             <p className="text-end w-full font-medium px-4">
               Total&nbsp;&nbsp;

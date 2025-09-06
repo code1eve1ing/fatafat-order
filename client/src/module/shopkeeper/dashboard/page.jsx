@@ -24,8 +24,95 @@ import {
   Search,
 } from "lucide-react";
 import { Sidebar } from "../_common/Sidebar";
+import PremiumFeatureCover from "@/components/common/PremiumFeatureCover";
+import shopkeeperService from "@/services/shopkeeperService";
+import useShopkeeperStore from "@/store/shopkeeper";
+import { useEffect } from "react";
+import { getCurrentDate } from "@/lib/utils";
+
+function getOrderStats(orders) {
+  let sales = 0;
+  let totalOrders = orders.length;
+  let itemCount = {};
+
+  if (!orders?.length) {
+    return {
+      sales: 0,
+      totalOrders: 0,
+      popularItem: null
+    }
+  }
+
+  for (const order of orders) {
+    sales += order.totalAmount;
+
+    for (const item of order.items) {
+      if (!itemCount[item.name]) {
+        itemCount[item.name] = 0;
+      }
+      itemCount[item.name] += item.quantity;
+    }
+  }
+
+  // find most popular item
+  let popularItem = null;
+  let maxCount = 0;
+  for (const [name, count] of Object.entries(itemCount)) {
+    if (count > maxCount) {
+      maxCount = count;
+      popularItem = name;
+    }
+  }
+
+  return {
+    sales,
+    totalOrders,
+    popularItem
+  };
+}
+
+function groupItemsByName(orders) {
+  const grouped = {};
+  if (!orders?.length) {
+    return []
+  }
+
+  orders.forEach(order => {
+    order.items.forEach(item => {
+      if (!grouped[item.name]) {
+        grouped[item.name] = {
+          name: item.name,
+          quantity: 0,
+          amount: 0
+        };
+      }
+
+      grouped[item.name].quantity += item.quantity;
+      grouped[item.name].amount += item.price * item.quantity;
+    });
+  });
+
+  return Object.values(grouped);
+}
+
 
 export function ShopkeeperDashboard() {
+
+  const { setProducts, setMenuSections, setOrders, getOrders, updateOrder } = useShopkeeperStore()
+
+  const orders = getOrders(null, "completed");
+  const { sales, totalOrders, popularItem } = getOrderStats(orders);
+  const groupedItems = groupItemsByName(orders);
+  const date = getCurrentDate();
+
+  useEffect(() => {
+    const products = shopkeeperService.getProducts()
+    setProducts(products)
+    const sections = shopkeeperService.getSections()
+    setMenuSections(sections)
+    const orders = shopkeeperService.getOrders()
+    setOrders(orders)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,7 +131,9 @@ export function ShopkeeperDashboard() {
                   className="pl-10 w-[200px] md:w-[300px]"
                 />
               </div>
-              <Button variant="outline">Share Shop</Button>
+              <PremiumFeatureCover className="rounded-md">
+                <Button variant="outline">Share Shop</Button>
+              </PremiumFeatureCover>
             </div>
           </div>
           {/* Mobile Search - Only visible on small screens */}
@@ -68,10 +157,12 @@ export function ShopkeeperDashboard() {
                 <ShoppingCart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₹12,450</div>
-                <p className="text-xs text-muted-foreground">
-                  +20.1% from yesterday
-                </p>
+                <div className="text-2xl font-bold">₹ {sales || 0}</div>
+                <PremiumFeatureCover>
+                  <p className="text-xs text-muted-foreground">
+                    +20.1% from yesterday
+                  </p>
+                </PremiumFeatureCover>
               </CardContent>
             </Card>
 
@@ -83,27 +174,32 @@ export function ShopkeeperDashboard() {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">18</div>
-                <p className="text-xs text-muted-foreground">
-                  +5 from yesterday
-                </p>
+                <div className="text-2xl font-bold">{totalOrders || 0}</div>
+                <PremiumFeatureCover>
+                  <p className="text-xs text-muted-foreground">
+                    +5 from yesterday
+                  </p>
+                </PremiumFeatureCover>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                  New Customers
-                </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">5</div>
-                <p className="text-xs text-muted-foreground">
-                  +2 from yesterday
-                </p>
-              </CardContent>
-            </Card>
+            <PremiumFeatureCover>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    New Customers
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">5</div>
+                  <p className="text-xs text-muted-foreground">
+                    +2 from yesterday
+                  </p>
+                </CardContent>
+              </Card>
+            </PremiumFeatureCover>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -113,81 +209,122 @@ export function ShopkeeperDashboard() {
                 <LineChart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">Ceramic Tiles</div>
-                <p className="text-xs text-muted-foreground">12 sold today</p>
+                <div className="text-2xl font-bold">{popularItem || 'N/A'}</div>
+                <PremiumFeatureCover>
+                  <p className="text-xs text-muted-foreground">12 sold today</p>
+                </PremiumFeatureCover>
               </CardContent>
             </Card>
           </div>
 
+          {
+            orders?.length > 0 ?
+              <Card className="mb-6">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <CardTitle>Orders Summary</CardTitle>
+                    <CardDescription>Basic Analytics for Today's orders</CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Item Name</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Quantity</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {
+                          groupedItems.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{item.name}</TableCell>
+                              <TableCell>₹{item.amount}</TableCell>
+                              <TableCell>{item.quantity}</TableCell>
+                            </TableRow>
+                          ))
+                        }
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+              : null
+          }
+
           {/* Recent Orders */}
-          <Card className="mb-6">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <CardTitle>Recent Orders</CardTitle>
-                <CardDescription>Last 5 orders from your shop</CardDescription>
-              </div>
-              <Button size="sm" className="gap-1 w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
-                New Order
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">#ORD-1256</TableCell>
-                      <TableCell>Rahul Sharma</TableCell>
-                      <TableCell>₹2,450</TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Completed
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        Today, 11:30 AM
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">#ORD-1255</TableCell>
-                      <TableCell>Priya Patel</TableCell>
-                      <TableCell>₹1,850</TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Completed
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        Today, 10:15 AM
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">#ORD-1254</TableCell>
-                      <TableCell>Amit Singh</TableCell>
-                      <TableCell>₹3,200</TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Pending
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        Today, 9:45 AM
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+          <PremiumFeatureCover>
+            <Card className="mb-6">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle>Recent Orders</CardTitle>
+                  <CardDescription>Last 5 orders from your shop</CardDescription>
+                </div>
+                <Button size="sm" className="gap-1 w-full sm:w-auto">
+                  <Plus className="h-4 w-4" />
+                  New Order
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium">#ORD-1256</TableCell>
+                        <TableCell>Rahul Sharma</TableCell>
+                        <TableCell>₹2,450</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Completed
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          Today, 11:30 AM
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">#ORD-1255</TableCell>
+                        <TableCell>Priya Patel</TableCell>
+                        <TableCell>₹1,850</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Completed
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          Today, 10:15 AM
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">#ORD-1254</TableCell>
+                        <TableCell>Amit Singh</TableCell>
+                        <TableCell>₹3,200</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Pending
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          Today, 9:45 AM
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </PremiumFeatureCover>
 
           {/* Quick Actions & Limited Banner */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

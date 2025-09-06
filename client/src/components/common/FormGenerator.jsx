@@ -94,11 +94,25 @@ export function FormGenerator({
                                         )}
 
                                         {field.type === "select" && (
-                                            <Select onValueChange={rhfField.onChange} defaultValue={rhfField.value}>
+                                            <Select
+                                                onValueChange={(value) => {
+                                                    // Check if the selected option has an onClick handler
+                                                    const selectedOption = field.options?.find(opt =>
+                                                        typeof opt === 'object' && opt.value === value
+                                                    );
+
+                                                    if (selectedOption?.onClick) {
+                                                        selectedOption.onClick();
+                                                        // Don't update the value if it's a special action
+                                                        return;
+                                                    }
+                                                    rhfField.onChange(value);
+                                                }}
+                                                value={rhfField.value}
+                                            >
                                                 <FormControl>
                                                     <SelectTrigger className="w-full">
                                                         <SelectValue placeholder={field.placeholder} />
-                                                        {field.placeholder}
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 {
@@ -106,26 +120,21 @@ export function FormGenerator({
                                                         <span className="absolute left-3.5 bottom-4 text-sm text-gray-500 pointer-events-none">Select ...</span>
                                                     ) : null
                                                 }
-                                                <SelectContent className="w-full ">
+                                                <SelectContent className="w-full">
                                                     {field.options?.map((opt) => (
                                                         typeof opt === "object" ? (
-                                                            opt.onClick ? (
-                                                                <SelectItem onClick={(e) => {
-                                                                    e.preventDefault()
-                                                                    opt?.onClick()
-                                                                }} key={opt.value} value={opt.value}>
-                                                                    {opt.value}
-                                                                </SelectItem>
-                                                            ) : (
-                                                                <SelectItem key={opt.value} value={String(opt.value)}>
-                                                                    {opt.label}
-                                                                </SelectItem>
-                                                            )
+                                                            <SelectItem
+                                                                key={opt.value}
+                                                                value={String(opt.value)}
+                                                            >
+                                                                {opt.label || opt.value}
+                                                            </SelectItem>
                                                         ) : (
-                                                            <SelectItem key={opt} value={opt}>
+                                                            <SelectItem key={opt} value={String(opt)}>
                                                                 {opt}
                                                             </SelectItem>
-                                                        )))}
+                                                        )
+                                                    ))}
                                                 </SelectContent>
                                                 <span className="text-xs text-muted-foreground">{field.helpText}</span>
                                             </Select>

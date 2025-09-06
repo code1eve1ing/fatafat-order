@@ -1,4 +1,5 @@
 // src/store/useShopStore.js
+import { getCurrentDate } from '@/lib/utils';
 import moment from 'moment';
 import { create } from 'zustand';
 
@@ -22,7 +23,7 @@ const useShopkeeperStore = create((set, get) => ({
     ),
     getMenuSections: () => get().menuSections,
     getOrders: (searchQuery = '', status = null, sortBy = null) => {
-        let filtered = [...get().orders];
+        let filtered = [...get().orders.filter(o => o.date === getCurrentDate())];
 
         // Apply search filter
         if (searchQuery) {
