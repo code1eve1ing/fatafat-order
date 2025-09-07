@@ -12,6 +12,9 @@ const InitialRouteHandler = ({ children }) => {
 
     useEffect(() => {
         setTimeout(() => {
+            if (window.location.origin === "https://www.fatafatorder.shop") {
+                return;
+            }
             // TODO: make this smarter
             if (accountType === FREE_TRIAL && !window.location.pathname.includes('shop')) {
                 navigate('/shop/dashboard');
@@ -30,6 +33,12 @@ const InitialRouteHandler = ({ children }) => {
 
         }, 1000);
     }, [accountType])
+
+    if (window.location.origin === "https://www.fatafatorder.shop") {
+        return <>
+            <Logo className='animate-pulse' />
+        </>
+    }
 
     if (!hasLoaded) {
         return <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
