@@ -2,29 +2,15 @@ import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
-    mobile: string;
     email?: string;
     password: string;
-    plan_id?: mongoose.Types.ObjectId;
-    shop_id?: mongoose.Types.ObjectId;
-    isVerified: boolean;
-    createdAt: Date;
-    updatedAt: Date;
+    name: string;
+    mobile: string;
+    is_verified: boolean;
     comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 const userSchema: Schema = new Schema({
-    mobile: {
-        type: String,
-        required: [true, 'Mobile number is required'],
-        unique: true,
-        validate: {
-            validator: function (v: string) {
-                return /^\d{10}$/.test(v);
-            },
-            message: 'Mobile number must be 10 digits'
-        }
-    },
     email: {
         type: String,
         unique: true,
@@ -41,20 +27,29 @@ const userSchema: Schema = new Schema({
         required: [true, 'Password is required'],
         minlength: [6, 'Password must be at least 6 characters']
     },
-    plan_id: {
-        type: Schema.Types.ObjectId,
-        ref: 'Plan'
+    name: {
+        type: String,
+        required: [true, 'Name is required'],
+        trim: true,
+        maxlength: [100, 'Name cannot exceed 100 characters']
     },
-    shop_id: {
-        type: Schema.Types.ObjectId,
-        ref: 'Shop'
+    mobile: {
+        type: String,
+        required: [true, 'Mobile number is required'],
+        unique: true,
+        validate: {
+            validator: function (v: string) {
+                return /^\d{10}$/.test(v);
+            },
+            message: 'Mobile number must be 10 digits'
+        }
     },
-    isVerified: {
+    is_verified: {
         type: Boolean,
         default: false
     }
 }, {
-    timestamps: true
+    timestamps: false
 });
 
 userSchema.pre('save', async function (next) {

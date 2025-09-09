@@ -1,19 +1,32 @@
 import toast from 'react-hot-toast';
 import api from './api';
+import useAuthStore from '../store/auth';
 
 class AuthService {
     // Sign up with mobile/email
     async signup(userData) {
+        const authStore = useAuthStore.getState();
         try {
+            authStore.setLoading(true);
             const response = await api.post('/auth/signup', userData);
-            const { token } = response.data;
-            // Store token and user data
+            const { token, userId, shopId } = response.data;
+
+            // Store token and update auth state
+            authStore.setAuthData({
+                token,
+                user: { _id: userId, mobile: userData.mobile, email: userData.email, name: userData.user_name },
+                shopId
+            });
+
             localStorage.setItem('token', token);
-            toast.success('Account created successfully. Please verify your OTP.');
+            toast.success(response.data.message || 'Account created successfully!');
             return response.data;
         } catch (error) {
+            authStore.setError(error.message || 'Failed to create account. Please try again later.');
             // Error is already handled by interceptor
             throw error;
+        } finally {
+            authStore.setLoading(false);
         }
     }
 

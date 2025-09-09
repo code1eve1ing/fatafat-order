@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import useAuth from "@/hooks/useAuth";
+import useShopStore from "@/store/shop";
 
 // Validation schema
 const formSchema = z.object({
@@ -83,6 +84,7 @@ export function ShopOnboardingPage() {
   const createShop = searchParams.get("create-shop");
   const [billingPeriod, setBillingPeriod] = useState("monthly");
   const [selectedSubscriptionPlan, setSelectedSubscriptionPlan] = useState(null);
+  const { categories } = useShopStore();
   const { signup, loading } = useAuth();
 
   const navigate = useNavigate();
@@ -116,17 +118,6 @@ export function ShopOnboardingPage() {
       trigger(fieldName);
     }
   };
-
-  const shopCategories = [
-    "Grocery",
-    "Pharmacy",
-    "Restaurant",
-    "Clothing",
-    "Electronics",
-    "Stationery",
-    "Hardware",
-    "Other",
-  ];
 
   const subscriptionPlans = [
     {
@@ -225,8 +216,8 @@ export function ShopOnboardingPage() {
         });
         return;
       }
-      console.log("Hello...")
-      await createNewShop();
+      await createNewShopAndRegisterUser();
+      // setCurrentStep(currentStep + 1);
     }
 
     // Validation for subscription step
@@ -238,24 +229,28 @@ export function ShopOnboardingPage() {
     }
 
     setCurrentStep(currentStep + 1);
+
   };
 
   const prevStep = () => {
     setCurrentStep(currentStep - 1);
   };
 
-  const createNewShop = async () => {
-    let data = form.getValues();
-    console.log(data)
-    // TODO: Create new shop (shop service) + register user (auth service) ...
-    await signup(data)
-    // if (freeTrial) {
-    //   const { mobile, email, password } = data
-    //   data = { mobile, email: email || undefined, password }
-    //   await signup(data);
-    //   navigate('/shop/dashboard')
-    // }
-    // setCurrentStep(currentStep + 1)
+  const createNewShopAndRegisterUser = async () => {
+    const transformFormData = (formData) => {
+      return {
+        user_name: formData.shop_owner_name,
+        shop_name: formData.shop_name,
+        shop_category_id: formData.shop_category,
+        mobile: formData.mobile,
+        email: formData.email,
+        password: formData.password
+      };
+    };
+    const data = form.getValues();
+    const apiData = transformFormData(data);
+    await signup(apiData);
+    setCurrentStep(currentStep + 1)
   };
 
   const handlePayment = async () => {
@@ -274,7 +269,7 @@ export function ShopOnboardingPage() {
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Home
       </Button>
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md my-12">
         <CardHeader className="text-center">
           <div className="mx-auto flex flex-col items-center">
             <div className="bg-primary/10 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4">
@@ -378,9 +373,9 @@ export function ShopOnboardingPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {shopCategories.map((category) => (
-                                <SelectItem key={category} value={category}>
-                                  {category}
+                              {categories?.map((category) => (
+                                <SelectItem key={category._id} value={category._id}>
+                                  {category.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
