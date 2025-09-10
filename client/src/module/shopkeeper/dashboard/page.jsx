@@ -26,7 +26,7 @@ import {
 import { Sidebar } from "../_common/Sidebar";
 import PremiumFeatureCover from "@/components/common/PremiumFeatureCover";
 import shopkeeperService from "@/services/shopkeeperService";
-import useShopkeeperStore from "@/store/shopkeeper";
+import useShopStore from "@/store/shop";
 import { useEffect } from "react";
 import { getCurrentDate } from "@/lib/utils";
 
@@ -98,7 +98,7 @@ function groupItemsByName(orders) {
 
 export function ShopkeeperDashboard() {
 
-  const { setProducts, setMenuSections, setOrders, getOrders, updateOrder } = useShopkeeperStore()
+  const { setProducts, setMenuSections, setOrders, getOrders, updateOrder } = useShopStore()
 
   const orders = getOrders(null, "completed");
   const { sales, totalOrders, popularItem } = getOrderStats(orders);

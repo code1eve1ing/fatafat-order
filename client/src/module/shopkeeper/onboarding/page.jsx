@@ -75,8 +75,6 @@ const formSchema = z.object({
 
 export function ShopOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [touchedFields, setTouchedFields] = useState(new Set());
   const [searchParams] = useSearchParams();
   const freeTrial = searchParams.get("free-trial");
@@ -198,14 +196,6 @@ export function ShopOnboardingPage() {
   }, [currentStep]);
 
   const nextStep = async () => {
-    const currentFields = steps[currentStep - 1].fields;
-
-    // Skip validation for subscription step as it has no form fields
-    if (steps[currentStep - 1].title !== PLAN_PAGE_TITLE && currentFields.length > 0) {
-      const result = await trigger(currentFields);
-      if (!result) return;
-    }
-
     // Additional validation for password matching in Account Security step
     if (steps[currentStep - 1].title === "Account Security") {
       const { password, confirm_password } = form.getValues();
@@ -217,18 +207,9 @@ export function ShopOnboardingPage() {
         return;
       }
       await createNewShopAndRegisterUser();
-      // setCurrentStep(currentStep + 1);
+    } else {
+      setCurrentStep(currentStep + 1);
     }
-
-    // Validation for subscription step
-    if (steps[currentStep - 1].title === PLAN_PAGE_TITLE) {
-      if (!selectedSubscriptionPlan) {
-        alert("Please select a subscription plan to continue.");
-        return;
-      }
-    }
-
-    setCurrentStep(currentStep + 1);
 
   };
 
@@ -250,7 +231,9 @@ export function ShopOnboardingPage() {
     const data = form.getValues();
     const apiData = transformFormData(data);
     await signup(apiData);
-    setCurrentStep(currentStep + 1)
+    navigate('/shop/dashboard');
+    // TODO: remove plan + payment screens
+    // setCurrentStep(currentStep + 1)
   };
 
   const handlePayment = async () => {
@@ -496,153 +479,11 @@ export function ShopOnboardingPage() {
                   </>
                 )}
 
-                {/* Step 4: Subscription */}
-                {steps[currentStep - 1].title === PLAN_PAGE_TITLE && (
-                  <div className="space-y-6">
-                    {/* Header */}
-                    {/* <div className="text-center">
-                      <div className="flex items-center justify-center mb-2">
-                        <Rocket className="mr-2 animate-bounce" size={20} />
-                        <span className="text-lg font-semibold">Business Booster</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Choose the right plan for your business needs
-                      </p>
-                    </div> */}
 
-                    {/* Billing Toggle */}
-                    <div className="bg-gray-50 p-4 rounded-lg border">
-                      <Tabs
-                        value={billingPeriod}
-                        onValueChange={setBillingPeriod}
-                        className="w-full"
-                      >
-                        <TabsList className="grid grid-cols-2 w-full">
-                          <TabsTrigger value="monthly" className="text-sm">
-                            Monthly
-                          </TabsTrigger>
-                          <TabsTrigger value="yearly" className="text-sm relative">
-                            Yearly <span className="ml-1 text-xs text-green-600 absolute -bottom-5 left-[50%] translate-x-[-50%]">Save Upto 20%</span>
-                          </TabsTrigger>
-                        </TabsList>
-                      </Tabs>
-                    </div>
-
-                    {/* Plans */}
-                    <div className="space-y-4">
-                      {subscriptionPlans.map((plan, index) => (
-                        <div
-                          key={index}
-                          className={`relative rounded-lg border p-4 cursor-pointer transition-all ${selectedSubscriptionPlan?.name === plan.name
-                            ? "border-blue-300 ring-1 ring-blue-100 shadow-sm bg-blue-50"
-                            : plan.popular
-                              ? "border-blue-300 ring-1 ring-blue-100 shadow-sm"
-                              : "border-gray-200 hover:border-gray-300"
-                            }`}
-                          onClick={() => setSelectedSubscriptionPlan(plan)}
-                        >
-                          {plan.popular && (
-                            <div className="absolute top-4 right-4">
-                              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200 px-2 py-1 text-xs">
-                                <Star className="h-3 w-3 fill-blue-500 text-blue-500" />
-                              </Badge>
-                            </div>
-                          )}
-
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="text-lg font-semibold text-gray-900 mb-2">{plan.name}</h3>
-
-                              <div className="mb-3">
-                                <div className="flex items-baseline">
-                                  <span className="text-2xl font-bold text-gray-900">
-                                    ₹{billingPeriod === "monthly" ? plan.price.monthly : plan.price.yearly}
-                                  </span>
-                                  <span className="text-gray-500 ml-1">
-                                    /{billingPeriod === "monthly" ? "month" : "year"}
-                                  </span>
-                                </div>
-                                {billingPeriod === "yearly" && (
-                                  <div className="flex items-center mt-1">
-                                    <span className="text-sm text-gray-400 line-through mr-2">
-                                      ₹{Number(plan.price.monthly) * 12}
-                                    </span>
-                                    <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full">
-                                      Save {(((Number(plan.price.monthly) * 12) - Number(plan.price.yearly)) / (Number(plan.price.monthly) * 12) * 100).toFixed(2)}%
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-
-                              <ul className="space-y-2">
-                                {plan.features.map((feature, featureIndex) => (
-                                  <li key={featureIndex} className="flex items-start">
-                                    <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                                    <span className="text-sm text-gray-700">{feature.tag}</span>
-                                    {feature.info && (
-                                      <ToolTip type="Info" text={feature.info} />
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            <div className="ml-4">
-                              <div className={`w-4 h-4 rounded-full border-2 ${selectedSubscriptionPlan?.name === plan.name
-                                ? "bg-blue-600 border-blue-600"
-                                : "border-gray-300"
-                                }`}>
-                                {selectedSubscriptionPlan?.name === plan.name && (
-                                  <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Payment note */}
-                    <div className="text-center">
-                      <p className="text-xs text-gray-500">
-                        All payments processed securely via Razorpay.
-                      </p>
-                    </div>
-                  </div>
-                )}
               </form>
             </Form>
           ) : (
-            /* Step 4: Payment */
-            <div className="space-y-6">
-              <div className="bg-primary/10 p-6 rounded-lg text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <IndianRupee className="h-6 w-6 text-primary" />
-                  <span className="text-2xl font-bold">50</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  One-time registration fee
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="font-medium">Payment Methods</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="gap-2">
-                    UPI
-                  </Button>
-                  <Button variant="outline" className="gap-2">
-                    Card
-                  </Button>
-                  <Button variant="outline" className="gap-2">
-                    Net Banking
-                  </Button>
-                  <Button variant="outline" className="gap-2">
-                    Wallet
-                  </Button>
-                </div>
-              </div>
-            </div>
+            null
           )}
         </CardContent>
 

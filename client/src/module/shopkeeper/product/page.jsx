@@ -33,7 +33,7 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "../_common/Sidebar";
 import { AddProductModal } from "../_common/AddProduct";
 import shopkeeperService from "@/services/shopkeeperService";
-import useShopkeeperStore from "@/store/shopkeeper";
+import useShopStore from "@/store/shop";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 
@@ -44,7 +44,7 @@ export function ProductsPage() {
   const [selectedSectionId, setSelectedSectionId] = useState(null);
 
   // Global variables
-  const { getProducts, setProducts, getMenuSections, setMenuSections } = useShopkeeperStore()
+  const { getProducts, setProducts, getMenuSections, setMenuSections } = useShopStore()
   const products = getProducts(searchQuery, selectedSectionId);
   const sections = getMenuSections();
 

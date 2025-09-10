@@ -4,20 +4,20 @@ import { persist } from 'zustand/middleware';
 const useAuthStore = create(
     (set) => ({
         user: null,
-        token: null,
-        shopId: null,
         isAuthenticated: false,
         loading: false,
         error: null,
 
         // Set user data after successful signup/login
+        // TODO: create constants for role
         setAuthData: (data) => set({
             user: data.user || null,
-            token: data.token || null,
-            shopId: data.shopId || null,
-            isAuthenticated: !!data.token,
+            role: data.role,
+            isAuthenticated: true,
             error: null
         }),
+
+        setUser: (user) => set({ user }),
 
         // Set loading state
         setLoading: (loading) => set({ loading }),
@@ -28,8 +28,6 @@ const useAuthStore = create(
         // Clear auth data on logout
         clearAuth: () => set({
             user: null,
-            token: null,
-            shopId: null,
             isAuthenticated: false,
             error: null
         })

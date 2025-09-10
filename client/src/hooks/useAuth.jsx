@@ -24,6 +24,22 @@ const useAuth = () => {
         }
     };
 
+    const getCurrentUser = async (callback) => {
+        setLoading(true);
+        try {
+            const result = await authService.getCurrentUser();
+            callback(result)
+            // Propably we are navigating in callback, adding settimeout for no jumping in ui after full-screen loader hides
+            setTimeout(() => {
+                setLoading(false);
+            }, 1000);
+            return result;
+        } catch (error) {
+            setLoading(false);
+            throw error;
+        }
+    }
+
     const verifyOTP = async (mobile, code) => {
         setLoading(true);
         try {
@@ -78,7 +94,8 @@ const useAuth = () => {
         verifyOTP,
         login,
         resendOTP,
-        logout
+        logout,
+        getCurrentUser
     };
 };
 

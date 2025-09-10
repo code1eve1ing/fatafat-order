@@ -1,23 +1,26 @@
 import toast from 'react-hot-toast';
 import api from './api';
 import useAuthStore from '../store/auth';
+import useShopStore from '@/store/shop';
+import { SHOPKEEPER } from '@/lib/constants/user';
 
 class AuthService {
     // Sign up with mobile/email
     async signup(userData) {
         const authStore = useAuthStore.getState();
+        const shopStore = useShopStore.getState();
         try {
             authStore.setLoading(true);
             const response = await api.post('/auth/signup', userData);
-            const { token, userId, shopId } = response.data;
+            const { token, userId, shop } = response.data;
 
             // Store token and update auth state
             authStore.setAuthData({
                 token,
                 user: { _id: userId, mobile: userData.mobile, email: userData.email, name: userData.user_name },
-                shopId
+                role: SHOPKEEPER // role until customer comes in scene :)
             });
-
+            shopStore.setShopDetails(shop);
             localStorage.setItem('token', token);
             toast.success(response.data.message || 'Account created successfully!');
             return response.data;
@@ -77,9 +80,23 @@ class AuthService {
 
     // Get current user profile
     async getCurrentUser() {
+        const authStore = useAuthStore.getState();
+        const shopStore = useShopStore.getState();
         try {
-            const response = await api.get('/auth/me');
-            return response.data;
+            const token = localStorage.getItem('token');
+            if (token) {
+                const response = await api.get('/auth/me');
+                const { user, role, shop, customer } = response.data;
+
+                authStore.setAuthData({
+                    user,
+                    role
+                });
+                shopStore.setShopDetails(shop);
+
+                return response.data;
+            }
+            return null;
         } catch (error) {
             throw error;
         }

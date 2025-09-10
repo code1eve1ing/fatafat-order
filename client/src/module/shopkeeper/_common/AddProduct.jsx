@@ -12,7 +12,7 @@ import { Plus } from "lucide-react";
 import * as z from "zod"
 import { FormGenerator } from "@/components/common/FormGenerator";
 import shopkeeperService from "@/services/shopkeeperService";
-import useShopkeeperStore from "@/store/shopkeeper";
+import useShopStore from "@/store/shop";
 
 /**
  * 
@@ -27,7 +27,7 @@ export function AddProductModal({ variant = "default", linkText, data, isEdit, h
     const [isOpen, setIsOpen] = useState(null);
     const [defaultValues, setDefaultValues] = useState({});
     const [isCreateMenuSection, setIsCreateMenuSection] = useState(false);
-    const { addProduct, addSection, getMenuSections, updateProduct } = useShopkeeperStore();
+    const { addProduct, addSection, getMenuSections, updateProduct } = useShopStore();
     const [_, set_] = useState({})
     const sections = getMenuSections();
 

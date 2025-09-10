@@ -13,6 +13,7 @@ const generateToken = (id: string): string => {
     return jwt.sign(payload, process.env.JWT_SECRET!);
 };
 
+// /auth/signup
 export const signup = async (req: Request, res: Response) => {
     try {
         const errors = validationResult(req);
@@ -78,7 +79,11 @@ export const signup = async (req: Request, res: Response) => {
         res.status(201).json({
             message: 'Account created successfully. We have sent verification link to your mobile number' + (email ? ' and email' : ''),
             userId: user._id,
-            shopId: shop._id,
+            shop: {
+                _id: shop._id,
+                name: shop.name,
+                category_id: shop.category_id
+            },
             token: generateToken(user._id.toString()),
         });
     } catch (error: any) {
@@ -209,20 +214,41 @@ export const resendOTP = async (req: Request, res: Response) => {
     }
 };
 
+
+// /auth/me
 export const getMe = async (req: AuthRequest, res: Response) => {
     try {
-        // const user = req.user;
-        // res.json({
-        //     user: {
-        //         id: user!._id,
-        //         mobile: user!.mobile,
-        //         email: user!.email,
-        //         isVerified: user!.isVerified,
-        //         plan_id: user!.plan_id,
-        //         shop_id: user!.shop_id,
-        //         createdAt: user!.createdAt
-        //     }
-        // });
+        const user_id = req?.user?._id
+        const user = await User.findById(user_id)
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        let shopkeeper = null
+        let shop = null
+        {
+            shopkeeper = await Shopkeeper.find({ user_id })
+            if (shopkeeper && shopkeeper?.length > 0) {
+                shop = await Shop.find({ _id: shopkeeper[0]?.shop_id })
+                // if (!shop) {
+                //     return res.status(404).json({ message: 'Shop not found' });
+                // }
+            }
+        }
+
+        let customer = null
+
+        res.status(200).json({
+            user: {
+                _id: user._id,
+                mobile: user.mobile,
+                email: user.email,
+                name: user.name
+            },
+            role: shopkeeper ? 'shopkeeper' : 'customer',
+            shop: shop ? shop[0] : null,
+            customer
+        })
     } catch (error: any) {
         console.error('Get me error:', error);
         res.status(500).json({ message: 'Server error' });

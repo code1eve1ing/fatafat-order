@@ -1,8 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Crown, X, Check, Star, Loader2, Smartphone } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
+import React, { useState } from "react";
+import { Crown } from "lucide-react";
 import { SubscriptionModal } from "./SubscriptionModal";
 import { PaymentModal } from "./PaymentModal";
 const plans = [
