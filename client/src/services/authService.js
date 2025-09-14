@@ -54,15 +54,23 @@ class AuthService {
     // Login
     async login(credentials) {
         try {
+            const authStore = useAuthStore.getState();
+            const shopStore = useShopStore.getState();
             const response = await api.post('/auth/login', credentials);
-            const { token, user } = response.data;
+            const { token, userId, shop, user } = response.data;
 
-            // Store token and user data
+            // Store token and update auth state
+            authStore.setAuthData({
+                token,
+                user: { _id: userId, mobile: user.mobile, email: user.email, name: user.name },
+                role: SHOPKEEPER // role until customer comes in scene :)
+            });
+            shopStore.setShopDetails(shop);
             localStorage.setItem('token', token);
-            localStorage.setItem('userData', JSON.stringify(user));
-
-            toast.success('Login successful!');
+            localStorage.removeItem('accountType');
+            toast.success(response.data.message || 'Login successful!');
             return response.data;
+
         } catch (error) {
             throw error;
         }
@@ -107,6 +115,8 @@ class AuthService {
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('userData');
+        localStorage.removeItem('accountType');
+        localStorage.removeItem('shopType');
         toast.success('Logged out successfully');
     }
 

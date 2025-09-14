@@ -112,7 +112,6 @@ const PremiumFeatureCover = ({ children, className, autoShowSubscriptonModal = f
   };
 
   useEffect(() => {
-    console.log(autoShowSubscriptonModal, searchParams.get('show-subscription-plan'));
     if (autoShowSubscriptonModal && searchParams.get('show-subscription-plan') === 'true') {
       setIsSubscriptionModalOpen(true);
     }

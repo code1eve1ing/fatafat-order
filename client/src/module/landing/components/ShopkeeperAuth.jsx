@@ -148,7 +148,7 @@ export function ShopkeeperAuth() {
                 name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email, Mobile or Shop No.</FormLabel>
+                    <FormLabel>Email or Mobile</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input placeholder="Enter ..." {...field} />
