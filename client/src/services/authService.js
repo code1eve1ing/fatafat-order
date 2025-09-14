@@ -22,6 +22,7 @@ class AuthService {
             });
             shopStore.setShopDetails(shop);
             localStorage.setItem('token', token);
+            localStorage.removeItem('accountType');
             toast.success(response.data.message || 'Account created successfully!');
             return response.data;
         } catch (error) {

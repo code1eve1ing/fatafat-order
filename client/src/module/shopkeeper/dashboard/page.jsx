@@ -24,7 +24,7 @@ import {
   Search,
 } from "lucide-react";
 import { Sidebar } from "../_common/Sidebar";
-import PremiumFeatureCover from "@/components/common/PremiumFeatureCover";
+import PremiumFeatureCover from "@/module/shopkeeper/_common/PremiumFeatureCover";
 import shopkeeperService from "@/services/shopkeeperService";
 import useShopStore from "@/store/shop";
 import { useEffect } from "react";

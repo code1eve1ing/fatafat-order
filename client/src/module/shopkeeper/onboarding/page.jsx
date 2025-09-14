@@ -80,6 +80,7 @@ export function ShopOnboardingPage() {
   const freeTrial = searchParams.get("free-trial");
   const selectedPlan = searchParams.get("selected-plan");
   const createShop = searchParams.get("create-shop");
+  const redirectFrom = searchParams.get("redirect-from");
   const [billingPeriod, setBillingPeriod] = useState("monthly");
   const [selectedSubscriptionPlan, setSelectedSubscriptionPlan] = useState(null);
   const { categories } = useShopStore();
@@ -231,7 +232,7 @@ export function ShopOnboardingPage() {
     const data = form.getValues();
     const apiData = transformFormData(data);
     await signup(apiData);
-    navigate('/shop/dashboard');
+    navigate((redirectFrom || '/shop/dashboard') + "?show-subscription-plan=true");
     // TODO: remove plan + payment screens
     // setCurrentStep(currentStep + 1)
   };
@@ -247,10 +248,10 @@ export function ShopOnboardingPage() {
         variant="ghost"
         size="sm"
         className="absolute top-4 left-4 md:top-6 md:left-6"
-        onClick={() => (window.location.href = "/")}
+        onClick={() => navigate(redirectFrom || "/")}
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Home
+        Back
       </Button>
       <Card className="w-full max-w-md my-12">
         <CardHeader className="text-center">

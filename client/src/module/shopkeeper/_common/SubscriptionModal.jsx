@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import ToolTip from "./ToolTip";
+import ToolTip from "../../../components/common/ToolTip";
 
 const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
     const [billingPeriod, setBillingPeriod] = useState("monthly");
@@ -133,7 +133,7 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
 
                                     <Button
                                         className={`w-full ${plan.popular ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-900 hover:bg-gray-800"}`}
-                                        onClick={() => onSelectPlan(plan)}
+                                        onClick={() => onSelectPlan(plan, billingPeriod)}
                                     >
                                         Get Started
                                     </Button>
@@ -164,7 +164,7 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
                         <div className="mt-6 text-center">
                             <p className="text-xs text-gray-500 flex items-center justify-center">
                                 {/* <Smartphone className="h-3 w-3 mr-1 text-gray-400" /> */}
-                                All payments processed securely via Razorpay.
+                                All payments processed securely via PhonePe.
                             </p>
                         </div>
                     </div>

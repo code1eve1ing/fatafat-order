@@ -2,6 +2,7 @@ import { FREE_TRIAL } from '@/lib/constants/user';
 import useShopStore from '@/store/shop'
 import React, { useEffect, useState } from 'react'
 import CategorySelectionModal from '../_common/CategorySelectionModal';
+import PremiumFeatureCover from '../_common/PremiumFeatureCover';
 
 const ShopkeeperManager = ({ children }) => {
 
@@ -31,6 +32,8 @@ const ShopkeeperManager = ({ children }) => {
                 categories={categories}
                 onCategorySelect={handleCategorySelect}
             />
+            {/* Opens subcription modal automatically on redirect from register/login */}
+            <PremiumFeatureCover autoShowSubscriptonModal={true} />
         </>
     )
 }
