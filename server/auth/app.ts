@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import authRoutes from './routes/auth';
 import { generalLimiter } from './middleware/rateLimit';
 import categoryRoutes from './routes/category';
+import planRoutes from './routes/plan';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/plans', planRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

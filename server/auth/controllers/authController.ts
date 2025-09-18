@@ -146,7 +146,14 @@ export const login = async (req: Request, res: Response) => {
 
         const { identifier, password } = req.body;
 
-        const user = await User.findOne({ mobile: identifier });
+        // Find user by either email or mobile
+        const user = await User.findOne({
+            $or: [
+                { email: identifier },
+                { mobile: identifier }
+            ]
+        });
+
         if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
@@ -173,13 +180,22 @@ export const login = async (req: Request, res: Response) => {
         }
         const token = generateToken(user._id.toString());
 
+        // Find shopkeeper details to get shop information
+        const shopkeeper = await Shopkeeper.findOne({ user_id: user._id }).populate('shop_id');
+
+        if (!shopkeeper || !shopkeeper.shop_id) {
+            return res.status(400).json({ message: 'Shop information not found' });
+        }
         res.json({
             message: 'Login successful',
-            token,
+            userId: user._id,
+            shop: shopkeeper.shop_id,
+            token: token,
             user: {
                 id: user._id,
                 mobile: user.mobile,
                 email: user.email,
+                name: user.name,
                 // isVerified: user.isVerified
             }
         });
