@@ -23,16 +23,18 @@ const useShopStore = create((set, get) => ({
     addProduct: (product) => set({ products: [product, ...get().products] }),
     addSection: (section) => set({ menuSections: [section, ...get().menuSections] }),
     addOrder: (order) => set({ orders: [order, ...get().orders] }),
+    addMenuSection: (section) => set({ menuSections: [section, ...get().menuSections] }),
     updateProduct: (product) => set({ products: get().products.map(p => p._id === product._id ? product : p) }),
     updateOrder: (order) => set({ orders: get().orders.map(o => o._id === order._id ? order : o) }),
     setProducts: (products) => set({ products }),
     setMenuSections: (menuSections) => set({ menuSections }),
     setOrders: (orders) => set({ orders }),
     getProducts: (searchQuery, sectionId) => get().products.filter(
-        (product) => sectionId ? product.section === sectionId : true
+        (product) => sectionId ? (product.section === sectionId || product.menu_section_id._id === sectionId) : true
     ).filter(
         (product) => product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            product.section.toLowerCase().includes(searchQuery.toLowerCase())
+            product.section?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.menu_section_id?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     ),
     getMenuSections: () => get().menuSections,
     getOrders: (searchQuery = '', status = null, sortBy = null) => {

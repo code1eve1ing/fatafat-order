@@ -108,14 +108,6 @@ export function OrdersPage() {
     }
   };
 
-  useEffect(() => {
-    const products = shopkeeperService.getProducts()
-    setProducts(products)
-    const sections = shopkeeperService.getSections()
-    setMenuSections(sections)
-    const orders = shopkeeperService.getOrders()
-    setOrders(orders)
-  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import * as z from "zod"
 import { FormGenerator } from "@/components/common/FormGenerator";
-import shopkeeperService from "@/services/shopkeeperService";
+import useShopkeeper from "@/hooks/useShopkeeper";
 import useShopStore from "@/store/shop";
 
 /**
@@ -27,11 +27,10 @@ export function AddProductModal({ variant = "default", linkText, data, isEdit, h
     const [isOpen, setIsOpen] = useState(null);
     const [defaultValues, setDefaultValues] = useState({});
     const [isCreateMenuSection, setIsCreateMenuSection] = useState(false);
-    const { addProduct, addSection, getMenuSections, updateProduct } = useShopStore();
-    const [_, set_] = useState({})
+    const { addProduct, updateProduct, addSection } = useShopkeeper();
+    const { getMenuSections } = useShopStore();
     const sections = getMenuSections();
-
-
+    const [_, set_] = useState({})
 
     const productSchema = z.object({
         name: z.string().min(1, "Product name is required"),
@@ -86,18 +85,22 @@ export function AddProductModal({ variant = "default", linkText, data, isEdit, h
         const productId = data?._id
         const submissionHandlers = {
             'FOOD_STORE': {
-                'add': (data) => {
-                    shopkeeperService.addProduct(data, (product) => {
-                        addProduct(product);
-                        setIsOpen(false)
-                    })
+                'add': async (data) => {
+                    try {
+                        await addProduct(data);
+                        setIsOpen(false);
+                    } catch (error) {
+                        console.error('Error adding product:', error);
+                    }
                 },
-                'edit': (data) => {
-                    const updatedProduct = { _id: productId, ...data }
-                    shopkeeperService.updateProduct(updatedProduct, (product) => {
-                        updateProduct(updatedProduct);
-                        setIsOpen(false)
-                    })
+                'edit': async (data) => {
+                    try {
+                        const updatedProduct = { _id: productId, ...data };
+                        await updateProduct(updatedProduct);
+                        setIsOpen(false);
+                    } catch (error) {
+                        console.error('Error updating product:', error);
+                    }
                 }
             }
         }
@@ -108,11 +111,13 @@ export function AddProductModal({ variant = "default", linkText, data, isEdit, h
         getSubmissionHandler()(data)
     }
 
-    const handleCreateMenuFormSubmit = (data) => {
-        shopkeeperService.saveSection(data, (section) => {
-            addSection(section);
-            setIsCreateMenuSection(false)
-        })
+    const handleCreateMenuFormSubmit = async (data) => {
+        try {
+            await addSection(data);
+            setIsCreateMenuSection(false);
+        } catch (error) {
+            console.error('Error adding section:', error);
+        }
     }
 
     // Used to control modal from external component
@@ -132,7 +137,7 @@ export function AddProductModal({ variant = "default", linkText, data, isEdit, h
     // Populate variables
     useEffect(() => {
         if (data) {
-            setDefaultValues(data)
+            setDefaultValues({ ...data, section: data.menu_section_id._id })
         } else {
             const defaultValuesMappins = {
                 'FOOD_STORE': { name: "", section: "", price: 0 }

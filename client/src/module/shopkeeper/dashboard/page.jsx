@@ -105,15 +105,6 @@ export function ShopkeeperDashboard() {
   const groupedItems = groupItemsByName(orders);
   const date = getCurrentDate();
 
-  useEffect(() => {
-    const products = shopkeeperService.getProducts()
-    setProducts(products)
-    const sections = shopkeeperService.getSections()
-    setMenuSections(sections)
-    const orders = shopkeeperService.getOrders()
-    setOrders(orders)
-  }, [])
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar />

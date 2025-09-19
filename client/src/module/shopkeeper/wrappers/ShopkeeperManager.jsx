@@ -3,10 +3,13 @@ import useShopStore from '@/store/shop'
 import React, { useEffect, useState } from 'react'
 import CategorySelectionModal from '../_common/CategorySelectionModal';
 import PremiumFeatureCover from '../_common/PremiumFeatureCover';
+import useShopkeeper from '@/hooks/useShopkeeper';
 
 const ShopkeeperManager = ({ children }) => {
 
     const [showCategorySelectionModal, setShowCategorySelectionModal] = useState(false)
+    const { loadProducts, loadSections, loadOrders } = useShopkeeper()
+    const shopDetails = useShopStore(state => state.shopDetails);
 
     const categories = useShopStore((state) => state.categories);
 
@@ -21,6 +24,14 @@ const ShopkeeperManager = ({ children }) => {
         localStorage.setItem('shopType', category)
         setShowCategorySelectionModal(false)
     }
+
+    useEffect(() => {
+        if (shopDetails) {
+            loadProducts()
+            loadSections()
+            loadOrders()
+        }
+    }, [shopDetails])
 
     // TODO: is it better to place navigate to home page here
     return (

@@ -32,7 +32,7 @@ import {
 import { useEffect, useState } from "react";
 import { Sidebar } from "../_common/Sidebar";
 import { AddProductModal } from "../_common/AddProduct";
-import shopkeeperService from "@/services/shopkeeperService";
+import useShopkeeper from "@/hooks/useShopkeeper";
 import useShopStore from "@/store/shop";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -43,10 +43,12 @@ export function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSectionId, setSelectedSectionId] = useState(null);
 
-  // Global variables
-  const { getProducts, setProducts, getMenuSections, setMenuSections } = useShopStore()
+  // Use shopkeeper hook
+  const { deleteProduct } = useShopkeeper();
+  const { getProducts, getMenuSections } = useShopStore();
   const products = getProducts(searchQuery, selectedSectionId);
   const sections = getMenuSections();
+
 
   // Modal handlers
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -69,19 +71,14 @@ export function ProductsPage() {
     setEditData(product)
   }
 
-  const handleDelete = (product) => {
-    shopkeeperService.deleteProduct(product._id, () => {
-      setProducts(products.filter(p => p._id !== product._id))
-    })
-
+  const handleDelete = async (product) => {
+    try {
+      await deleteProduct(product._id);
+    } catch (error) {
+      console.error('Error deleting product:', error);
+    }
   }
 
-  useEffect(() => {
-    const products = shopkeeperService.getProducts()
-    setProducts(products)
-    const sections = shopkeeperService.getSections()
-    setMenuSections(sections)
-  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -124,7 +121,7 @@ export function ProductsPage() {
         <main className="p-4 md:p-6">
           {/* Product Filters */}
           {
-            products.length > 0 ? (
+            products.length > 0 || selectedSectionId !== null ? (
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="flex-1 bg-white">
                   {/* <Button variant="outline" className="w-full justify-between" onClick={() => setIsOpen(true)}>
@@ -187,7 +184,8 @@ export function ProductsPage() {
                               {product.name}
                             </TableCell>
                             <TableCell>{product.price}</TableCell>
-                            <TableCell>{product.section}</TableCell>
+                            {/* TODO: improve below */}
+                            <TableCell>{product.section || product.menu_section_id.name}</TableCell>
                             <TableCell className="text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

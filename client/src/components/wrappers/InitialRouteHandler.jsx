@@ -33,7 +33,7 @@ const InitialRouteHandler = ({ children }) => {
 
     const getUserDetails = async () => {
         const callback = (user) => {
-            if (user?.role === SHOPKEEPER) {
+            if (user?.role === SHOPKEEPER && !window.location.pathname.includes('shop')) {
                 navigate('/shop/dashboard');
             }
 
