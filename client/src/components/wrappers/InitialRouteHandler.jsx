@@ -31,6 +31,7 @@ const InitialRouteHandler = ({ children }) => {
         }, 1000);
     }, [accountType])
 
+
     const getUserDetails = async () => {
         const callback = (user) => {
             if (user?.role === SHOPKEEPER && !window.location.pathname.includes('shop')) {
@@ -58,11 +59,13 @@ const InitialRouteHandler = ({ children }) => {
         getUserDetails();
     }, [])
 
+
     if (window.location.origin === "https://www.fatafatorder.shop") {
         return <>
             <Logo className='animate-pulse' />
         </>
     }
+
 
     if (loading) {
         return <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
