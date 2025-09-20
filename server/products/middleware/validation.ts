@@ -54,3 +54,12 @@ export const validateShopId = [
         .isMongoId()
         .withMessage('Invalid shop ID format')
 ];
+
+export const validateShopCode = [
+    param('shop_code')
+        .trim()
+        .notEmpty()
+        .withMessage('Shop code is required')
+        .matches(/^SHOP-\d{4}$/)
+        .withMessage('Shop code must be in format SHOP-XXXX where XXXX is 4 digits')
+];

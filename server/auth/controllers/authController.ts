@@ -35,10 +35,15 @@ export const signup = async (req: Request, res: Response) => {
             return res.status(400).json({ message: `User already exists with this ${conflictField}` });
         }
 
-        // 2. Save shop_name in name, shop_category_id in category_id in Shop model
+        // 2. Generate shop_code and save shop details
+        const shopCount = await Shop.countDocuments();
+        const shopCodeNumber = (shopCount + 1).toString().padStart(4, '0');
+        const shop_code = `SHOP-${shopCodeNumber}`;
+
         const shop = new Shop({
             name: shop_name,
-            category_id: shop_category_id
+            category_id: shop_category_id,
+            shop_code: shop_code
         });
 
         await shop.save();
@@ -82,7 +87,8 @@ export const signup = async (req: Request, res: Response) => {
             shop: {
                 _id: shop._id,
                 name: shop.name,
-                category_id: shop.category_id
+                category_id: shop.category_id,
+                shop_code: shop.shop_code
             },
             token: generateToken(user._id.toString()),
         });
