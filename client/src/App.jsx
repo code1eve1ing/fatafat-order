@@ -18,6 +18,7 @@ import InitialRouteHandler from "./components/wrappers/InitialRouteHandler";
 import { CategoriesPage } from "./module/admin/category/page";
 import InitialDataLoader from "./components/common/InitialDataLoader";
 import ShopkeeperManager from "./module/shopkeeper/wrappers/ShopkeeperManager";
+import StateViewer from "./components/common/StateViewer";
 
 // Unused 
 // import { ShopAccessPage } from "./module/customer/shopAccess/page";
@@ -110,6 +111,7 @@ function App() {
       </Router>
 
       <InitialDataLoader />
+      <StateViewer />
     </>
   );
 }

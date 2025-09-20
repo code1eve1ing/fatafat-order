@@ -3,7 +3,9 @@ ignore.zip
 design
 secret
 
-
+client/node_modules
 client/.env
 server/auth/.env
+server/products/.env
 server/auth/node_modules
+server/products/node_modules

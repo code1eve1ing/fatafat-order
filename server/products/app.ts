@@ -3,10 +3,9 @@ import helmet from 'helmet';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import authRoutes from './routes/auth';
+import menuSectionRoutes from './routes/menuSection';
+import productRoutes from './routes/product';
 import { generalLimiter } from './middleware/rateLimit';
-import categoryRoutes from './routes/category';
-import planRoutes from './routes/plan';
 
 dotenv.config();
 
@@ -22,13 +21,12 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/plans', planRoutes);
+app.use('/api/menu-sections', menuSectionRoutes);
+app.use('/api/products', productRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', message: 'Server is running' });
+    res.status(200).json({ status: 'OK', message: 'Products server is running' });
 });
 
 // 404 handler

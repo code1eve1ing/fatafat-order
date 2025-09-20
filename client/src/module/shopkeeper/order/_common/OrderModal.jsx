@@ -16,7 +16,7 @@ import {
   Trash2,
   ChevronRight,
 } from "lucide-react";
-import useShopkeeperStore from "@/store/shopkeeper";
+import useShopStore from "@/store/shop";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -40,7 +40,7 @@ export function OrderModal({ variant = "default", linkText }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSectionId, setSelectedSectionId] = useState(null);
 
-  const { getProducts, getMenuSections, addOrder } = useShopkeeperStore();
+  const { getProducts, getMenuSections, addOrder } = useShopStore();
   const products = getProducts(searchQuery, selectedSectionId);
   const sections = getMenuSections();
 
@@ -203,8 +203,8 @@ export function OrderModal({ variant = "default", linkText }) {
                   <div
                     key={product._id}
                     className={`border rounded-lg py-2 px-3 h-fit cursor-pointer transition-all duration-200 flex justify-between ${isSelected
-                        ? "border-1 border-green-300 bg-green-50/50"
-                        : "border-gray-200"
+                      ? "border-1 border-green-300 bg-green-50/50"
+                      : "border-gray-200"
                       }`}
                     onClick={() => handleProductSelect(product)}
                   >

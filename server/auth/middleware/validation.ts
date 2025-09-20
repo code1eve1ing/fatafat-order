@@ -12,7 +12,22 @@ export const validateSignup = [
         .withMessage('Please provide a valid email'),
     body('password')
         .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters long')
+        .withMessage('Password must be at least 6 characters long'),
+    body('user_name')
+        .trim()
+        .notEmpty()
+        .withMessage('User name is required')
+        .isLength({ max: 100 })
+        .withMessage('User name cannot exceed 100 characters'),
+    body('shop_name')
+        .trim()
+        .notEmpty()
+        .withMessage('Shop name is required')
+        .isLength({ max: 100 })
+        .withMessage('Shop name cannot exceed 100 characters'),
+    body('shop_category_id')
+        .isMongoId()
+        .withMessage('Invalid shop category ID format')
 ];
 
 export const validateLogin = [

@@ -28,6 +28,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import ToolTip from "@/components/common/ToolTip";
 import {
   Loader2,
   Store,
@@ -39,9 +42,13 @@ import {
   ChevronRight,
   ChevronLeft,
   ArrowLeft,
+  Check,
+  Star,
+  Rocket,
 } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import useAuth from "@/hooks/useAuth";
+import useShopStore from "@/store/shop";
 
 // Validation schema
 const formSchema = z.object({
@@ -68,11 +75,15 @@ const formSchema = z.object({
 
 export function ShopOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [touchedFields, setTouchedFields] = useState(new Set());
   const [searchParams] = useSearchParams();
   const freeTrial = searchParams.get("free-trial");
+  const selectedPlan = searchParams.get("selected-plan");
+  const createShop = searchParams.get("create-shop");
+  const redirectFrom = searchParams.get("redirect-from");
+  const [billingPeriod, setBillingPeriod] = useState("monthly");
+  const [selectedSubscriptionPlan, setSelectedSubscriptionPlan] = useState(null);
+  const { categories } = useShopStore();
   const { signup, loading } = useAuth();
 
   const navigate = useNavigate();
@@ -107,18 +118,35 @@ export function ShopOnboardingPage() {
     }
   };
 
-  const shopCategories = [
-    "Grocery",
-    "Pharmacy",
-    "Restaurant",
-    "Clothing",
-    "Electronics",
-    "Stationery",
-    "Hardware",
-    "Other",
+  const subscriptionPlans = [
+    {
+      name: "Starter",
+      price: { monthly: "12", yearly: "120" },
+      popular: false,
+      features: [
+        { tag: "Online Shop" },
+        { tag: "Chat with Customer" },
+        { tag: "Track Orders History" },
+        { tag: "Accept Online Orders ", info: "0.04% Charge Applies on Online Payment)" },
+        { tag: "Sales Reports" },
+        { tag: "Export Data (CSV/Excel)" }
+      ],
+    },
+    {
+      name: "Professional",
+      price: { monthly: "60", yearly: "600" },
+      popular: true,
+      features: [
+        { tag: "Basic Plan Features" },
+        { tag: "Live Whatsapp Alerts", info: "150 Free Alerts/Month On Orders - Later ₹0.150 for each alert" },
+        { tag: "Customize Online Shop" },
+        { tag: "50 Image Uploads", info: "Additional Charges For More Uploads" }
+      ],
+    },
   ];
 
-  const steps = [
+  const PLAN_PAGE_TITLE = "Business Booster"
+  const baseSteps = [
     {
       title: "Shop Information",
       description: "Tell us about your shop",
@@ -135,14 +163,32 @@ export function ShopOnboardingPage() {
       fields: ["password"],
     },
     {
+      title: PLAN_PAGE_TITLE,
+      description: "Choose your business plan",
+      fields: [],
+    },
+    {
       title: "Payment",
       description: "Complete your registration",
     },
   ];
 
+  // Apply conditional logic based on search parameters
+  let steps = [...baseSteps];
+
   if (freeTrial) {
-    steps.shift();
-    steps.pop();
+    steps.shift(); // Remove shop information step
+    steps.pop(); // Remove payment step
+    steps = steps.filter(step => step.title !== PLAN_PAGE_TITLE); // Remove subscription step
+  } else if (selectedPlan && createShop) {
+    // Both parameters have values - remove subscription step
+    steps = steps.filter(step => step.title !== PLAN_PAGE_TITLE);
+  } else if (selectedPlan && !createShop) {
+    // Only selected-plan has value - show only payment step
+    steps = [{
+      title: "Payment",
+      description: "Complete your registration",
+    }];
   }
 
   // Clear errors when moving between steps
@@ -151,11 +197,7 @@ export function ShopOnboardingPage() {
   }, [currentStep]);
 
   const nextStep = async () => {
-    const currentFields = steps[currentStep - 1].fields;
-    const result = await trigger(currentFields);
-    if (!result) return;
-
-    // Additional validation for password matching in step 3
+    // Additional validation for password matching in Account Security step
     if (steps[currentStep - 1].title === "Account Security") {
       const { password, confirm_password } = form.getValues();
       if (password && password !== confirm_password) {
@@ -165,23 +207,34 @@ export function ShopOnboardingPage() {
         });
         return;
       }
-      await handleSubmit();
+      await createNewShopAndRegisterUser();
+    } else {
+      setCurrentStep(currentStep + 1);
     }
-    setCurrentStep(currentStep + 1);
+
   };
 
   const prevStep = () => {
     setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = async () => {
-    let data = form.getValues();
-    if (freeTrial) {
-      const { mobile, email, password } = data
-      data = { mobile, email: email || undefined, password }
-    }
-    await signup(data);
-    navigate('/shop/dashboard')
+  const createNewShopAndRegisterUser = async () => {
+    const transformFormData = (formData) => {
+      return {
+        user_name: formData.shop_owner_name,
+        shop_name: formData.shop_name,
+        shop_category_id: formData.shop_category,
+        mobile: formData.mobile,
+        email: formData.email,
+        password: formData.password
+      };
+    };
+    const data = form.getValues();
+    const apiData = transformFormData(data);
+    await signup(apiData);
+    navigate((redirectFrom || '/shop/dashboard') + "?show-subscription-plan=true");
+    // TODO: remove plan + payment screens
+    // setCurrentStep(currentStep + 1)
   };
 
   const handlePayment = async () => {
@@ -195,12 +248,12 @@ export function ShopOnboardingPage() {
         variant="ghost"
         size="sm"
         className="absolute top-4 left-4 md:top-6 md:left-6"
-        onClick={() => (window.location.href = "/")}
+        onClick={() => navigate(redirectFrom || "/")}
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Home
+        Back
       </Button>
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md my-12">
         <CardHeader className="text-center">
           <div className="mx-auto flex flex-col items-center">
             <div className="bg-primary/10 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4">
@@ -304,9 +357,9 @@ export function ShopOnboardingPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {shopCategories.map((category) => (
-                                <SelectItem key={category} value={category}>
-                                  {category}
+                              {categories?.map((category) => (
+                                <SelectItem key={category._id} value={category._id}>
+                                  {category.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -426,44 +479,17 @@ export function ShopOnboardingPage() {
                     />
                   </>
                 )}
+
+
               </form>
             </Form>
           ) : (
-            /* Step 4: Payment */
-            <div className="space-y-6">
-              <div className="bg-primary/10 p-6 rounded-lg text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <IndianRupee className="h-6 w-6 text-primary" />
-                  <span className="text-2xl font-bold">50</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  One-time registration fee
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="font-medium">Payment Methods</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="gap-2">
-                    UPI
-                  </Button>
-                  <Button variant="outline" className="gap-2">
-                    Card
-                  </Button>
-                  <Button variant="outline" className="gap-2">
-                    Net Banking
-                  </Button>
-                  <Button variant="outline" className="gap-2">
-                    Wallet
-                  </Button>
-                </div>
-              </div>
-            </div>
+            null
           )}
         </CardContent>
 
         <CardFooter className="flex justify-between">
-          {currentStep > 1 && currentStep <= steps.length - 1 ? (
+          {currentStep > 1 && (steps[currentStep - 1].title !== "Payment" || (selectedPlan && !createShop)) ? (
             <Button
               variant="outline"
               onClick={prevStep}
@@ -475,19 +501,20 @@ export function ShopOnboardingPage() {
             <div></div>
           )}
 
-          {steps[currentStep - 1].title !== "Payment" ? (
-            <Button
-              onClick={nextStep}
-              className="gap-2"
-              loading={loading}
-            >
-              <>
-                {steps[currentStep - 1].title === "Account Security" ? "Submit" : "Next"}
-                {steps[currentStep - 1].title !== "Account Security" ? <ChevronRight className="h-4 w-4" /> : null}
-
-              </>
-            </Button>
-          ) : (
+          {/* {steps[currentStep - 1].title !== "Payment" ? ( */}
+          <Button
+            onClick={nextStep}
+            className="gap-2"
+            loading={loading}
+          >
+            <>
+              {steps[currentStep - 1].title === "Account Security" ? "Submit" :
+                steps[currentStep - 1].title === PLAN_PAGE_TITLE ? "Continue with Plan" : "Next"}
+              {steps[currentStep - 1].title !== "Account Security" ? <ChevronRight className="h-4 w-4" /> :
+                steps[currentStep - 1].title === "Payment" ? "Pay ₹50 & Complete Registration" : null}
+            </>
+          </Button>
+          {/* ) : (
             <Button
               onClick={handlePayment}
               className="w-full gap-2"
@@ -499,7 +526,7 @@ export function ShopOnboardingPage() {
                 "Pay ₹50 & Complete Registration"
               )}
             </Button>
-          )}
+          )} */}
         </CardFooter>
       </Card>
     </div>

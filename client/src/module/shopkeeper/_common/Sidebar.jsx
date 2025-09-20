@@ -8,14 +8,19 @@ import {
     LineChart,
     Menu,
     X,
+    LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useAuth from "@/hooks/useAuth";
+import useAuthStore from "@/store/auth";
 
 export function Sidebar() {
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
+    const { logout } = useAuth();
+    const { isAuthenticated } = useAuthStore()
 
     return (<>
         {/* Overlay for mobile when sidebar is open */}
@@ -54,11 +59,15 @@ export function Sidebar() {
                 <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate("/shop/orders")}>
                     <ShoppingCart className="h-4 w-4" /> Orders
                 </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2 bg-gray-800">
-                    <Users className="h-4 w-4" /> Customers
-                </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2 bg-gray-800">
-                    <Calendar className="h-4 w-4" /> Analytics
+                <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2 mt-4 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => {
+                        logout();
+                        navigate('/');
+                    }}
+                >
+                    <LogOut className="h-4 w-4" /> {isAuthenticated ? 'Logout' : 'Back to Home'}
                 </Button>
             </nav>
         </div>

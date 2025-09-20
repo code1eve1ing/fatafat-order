@@ -1,8 +1,10 @@
 import { FREE_TRIAL } from "@/lib/constants/user";
+import { productsApi } from './api';
+import useShopStore from '@/store/shop';
 
 class ShopkeeperService {
 
-    addProduct(productData, callback) {
+    async addProduct(productData, callback) {
         const isFreeTrial = localStorage.getItem("accountType") === FREE_TRIAL;
         if (isFreeTrial) {
             const savedProducts = localStorage.getItem("savedProducts") || "[]";
@@ -12,11 +14,26 @@ class ShopkeeperService {
             localStorage.setItem("savedProducts", JSON.stringify(parsedProducts));
             callback(newProduct)
         } else {
-            // TODO: save into api 
+            try {
+                const shopStore = useShopStore.getState();
+                const shopId = shopStore.shopDetails?._id;
+
+                const response = await productsApi.post('/products', {
+                    name: productData.name,
+                    shop_id: shopId,
+                    menu_section_id: productData.section,
+                    price: productData.price,
+                    description: productData.description
+                });
+
+                callback(response.data.product);
+            } catch (error) {
+                throw error;
+            }
         }
     }
 
-    updateProduct(productData, callback) {
+    async updateProduct(productData, callback) {
         const isFreeTrial = localStorage.getItem("accountType") === FREE_TRIAL;
         if (isFreeTrial) {
             const savedProducts = localStorage.getItem("savedProducts") || "[]";
@@ -25,7 +42,22 @@ class ShopkeeperService {
             localStorage.setItem("savedProducts", JSON.stringify(parsedProducts));
             callback(productData)
         } else {
-            // TODO: save into api 
+            try {
+                const shopStore = useShopStore.getState();
+                const shopId = shopStore.shopDetails?._id;
+
+                const response = await productsApi.put(`/products/${productData._id}`, {
+                    name: productData.name,
+                    shop_id: shopId,
+                    menu_section_id: productData.section,
+                    price: productData.price,
+                    description: productData.description
+                });
+
+                callback(response.data.product);
+            } catch (error) {
+                throw error;
+            }
         }
     }
 
@@ -42,7 +74,7 @@ class ShopkeeperService {
         }
     }
 
-    deleteProduct(productId, callback) {
+    async deleteProduct(productId, callback) {
         const isFreeTrial = localStorage.getItem("accountType") === FREE_TRIAL;
         if (isFreeTrial) {
             const savedProducts = localStorage.getItem("savedProducts") || "[]";
@@ -51,24 +83,36 @@ class ShopkeeperService {
             localStorage.setItem("savedProducts", JSON.stringify(parsedProducts));
             callback()
         } else {
-            // TODO: save into api 
+            try {
+                await productsApi.delete(`/products/${productId}`);
+                callback();
+            } catch (error) {
+                throw error;
+            }
         }
     }
 
-    getProducts() {
+    async getProducts() {
         const isFreeTrial = localStorage.getItem("accountType") === FREE_TRIAL;
         if (isFreeTrial) {
             const savedProducts = localStorage.getItem("savedProducts") || "[]";
             return JSON.parse(savedProducts);
         } else {
-            // TODO: get from api 
-            return [];
+            try {
+                const shopStore = useShopStore.getState();
+                const shopId = shopStore.shopDetails?._id;
+                const response = await productsApi.get(`/products/shop/${shopId}`);
+                shopStore.setProducts(response.data.products);
+                return response.data.products;
+            } catch (error) {
+                throw error;
+            }
         }
     }
 
 
     // Only for food-store
-    saveSection(sectionData, callback) {
+    async saveSection(sectionData, callback) {
         console.log('sectionData', sectionData)
         const isFreeTrial = localStorage.getItem("accountType") === FREE_TRIAL;
         if (isFreeTrial) {
@@ -77,21 +121,40 @@ class ShopkeeperService {
             const newSection = { _id: String(Date.now()), order: parsedSections.length + 1, ...sectionData };
             parsedSections.unshift(newSection);
             localStorage.setItem("savedSections", JSON.stringify(parsedSections));
-            callback(newSection)
+            // callback(newSection)
         } else {
-            // TODO: save into api 
+            try {
+                const shopStore = useShopStore.getState();
+                const shopId = shopStore.shopDetails?._id;
+
+                const response = await productsApi.post('/menu-sections', {
+                    name: sectionData.name,
+                    shop_id: shopId
+                });
+                shopStore.addMenuSection(response.data.menuSection);
+            } catch (error) {
+                throw error;
+            }
         }
     }
 
     // Only for food-store
-    getSections() {
+    async getSections() {
         const isFreeTrial = localStorage.getItem("accountType") === FREE_TRIAL;
         if (isFreeTrial) {
             const savedSections = localStorage.getItem("savedSections") || "[]";
             return JSON.parse(savedSections).sort((a, b) => a.order - b.order);
         } else {
-            // TODO: get from api 
-            return [];
+            try {
+                const shopStore = useShopStore.getState();
+                const shopId = shopStore.shopDetails?._id;
+
+                const response = await productsApi.get(`/menu-sections/shop/${shopId}`);
+                shopStore.setMenuSections(response.data.menuSections);
+                return response.data.menuSections;
+            } catch (error) {
+                throw error;
+            }
         }
     }
 

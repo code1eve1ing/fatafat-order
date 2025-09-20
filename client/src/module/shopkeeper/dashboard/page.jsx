@@ -24,9 +24,9 @@ import {
   Search,
 } from "lucide-react";
 import { Sidebar } from "../_common/Sidebar";
-import PremiumFeatureCover from "@/components/common/PremiumFeatureCover";
+import PremiumFeatureCover from "@/module/shopkeeper/_common/PremiumFeatureCover";
 import shopkeeperService from "@/services/shopkeeperService";
-import useShopkeeperStore from "@/store/shopkeeper";
+import useShopStore from "@/store/shop";
 import { useEffect } from "react";
 import { getCurrentDate } from "@/lib/utils";
 
@@ -98,21 +98,12 @@ function groupItemsByName(orders) {
 
 export function ShopkeeperDashboard() {
 
-  const { setProducts, setMenuSections, setOrders, getOrders, updateOrder } = useShopkeeperStore()
+  const { setProducts, setMenuSections, setOrders, getOrders, updateOrder } = useShopStore()
 
   const orders = getOrders(null, "completed");
   const { sales, totalOrders, popularItem } = getOrderStats(orders);
   const groupedItems = groupItemsByName(orders);
   const date = getCurrentDate();
-
-  useEffect(() => {
-    const products = shopkeeperService.getProducts()
-    setProducts(products)
-    const sections = shopkeeperService.getSections()
-    setMenuSections(sections)
-    const orders = shopkeeperService.getOrders()
-    setOrders(orders)
-  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">

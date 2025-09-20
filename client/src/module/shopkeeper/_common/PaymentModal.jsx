@@ -6,18 +6,20 @@ import { Badge } from "@/components/ui/badge";
 
 const PaymentModal = ({ isOpen, onClose, selectedPlan }) => {
     const [isProcessing, setIsProcessing] = useState(false);
-    const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+    const [phonePeLoaded, setPhonePeLoaded] = useState(false);
 
     useEffect(() => {
-        // Load Razorpay script dynamically
+        // Load PhonePe SDK script dynamically
         const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.src = 'https://mercury-t2.phonepe.com/transact/js/checkout.js';
         script.async = true;
-        script.onload = () => setRazorpayLoaded(true);
+        script.onload = () => setPhonePeLoaded(true);
         document.body.appendChild(script);
 
         return () => {
-            document.body.removeChild(script);
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
         };
     }, []);
 
@@ -25,51 +27,50 @@ const PaymentModal = ({ isOpen, onClose, selectedPlan }) => {
         setIsProcessing(true);
 
         try {
-            // Convert price to paise (Razorpay expects amount in paise for INR)
-            const amount = parseInt(selectedPlan.price.monthly.replace(/[^0-9]/g, '')) * 100;
+            // Get the correct price based on billing period
+            const currentPrice = selectedPlan.billingPeriod === 'yearly' 
+                ? selectedPlan.price.yearly 
+                : selectedPlan.price.monthly;
+            
+            // Convert price to paise (PhonePe expects amount in paise for INR)
+            const amount = parseInt(currentPrice.replace(/[^0-9]/g, '')) * 100;
 
-            // For demo purposes, we'll create a mock order
-            const mockOrder = {
-                id: 'order_' + Math.random().toString(36).substr(2, 9),
+            // Create PhonePe payment request
+            const paymentData = {
+                merchantId: process.env.REACT_APP_PHONEPE_MERCHANT_ID || 'PGTESTPAYUAT',
+                merchantTransactionId: 'MT' + Date.now(),
+                merchantUserId: 'MUID' + Date.now(),
                 amount: amount,
-                currency: 'INR'
-            };
-
-            const options = {
-                key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-                amount: mockOrder.amount,
-                currency: mockOrder.currency,
-                name: 'Fatafat Order',
-                description: `${selectedPlan.name} Subscription`,
-                order_id: mockOrder.id,
-                handler: function (response) {
-                    console.log('Payment successful:', response);
-                    alert('Payment successful! Your subscription is activated.');
-                    onClose();
-                },
-                prefill: {
-                    name: 'Customer Name',
-                    email: 'customer@example.com',
-                    contact: '+919876543210'
-                },
-                notes: {
-                    plan: selectedPlan.name
-                },
-                theme: {
-                    color: '#2563eb' // Using blue-600
-                },
-                method: {
-                    upi: true
-                },
-                modal: {
-                    ondismiss: function () {
-                        setIsProcessing(false);
-                    }
+                redirectUrl: window.location.origin + '/payment/callback',
+                redirectMode: 'POST',
+                callbackUrl: window.location.origin + '/api/payment/callback',
+                mobileNumber: '9999999999',
+                paymentInstrument: {
+                    type: 'PAY_PAGE'
                 }
             };
 
-            const rzp = new window.Razorpay(options);
-            rzp.open();
+            // For demo purposes using test environment
+            const response = await fetch('/api/payment/initiate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...paymentData,
+                    planName: selectedPlan.name,
+                    billingPeriod: selectedPlan.billingPeriod
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success && result.data.instrumentResponse.redirectInfo) {
+                // Redirect to PhonePe payment page
+                window.location.href = result.data.instrumentResponse.redirectInfo.url;
+            } else {
+                throw new Error('Failed to initiate payment');
+            }
         } catch (error) {
             console.error('Payment error:', error);
             alert('Payment failed. Please try again.');
@@ -89,7 +90,7 @@ const PaymentModal = ({ isOpen, onClose, selectedPlan }) => {
                                     Complete Payment
                                 </DialogTitle>
                                 <p className="text-sm text-gray-500 mt-1">
-                                    Secure payment via Razorpay
+                                    Secure payment via PhonePe
                                 </p>
                             </div>
                             <button
@@ -110,7 +111,17 @@ const PaymentModal = ({ isOpen, onClose, selectedPlan }) => {
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="font-medium text-gray-700">Amount</span>
-                                <span className="text-2xl font-bold text-gray-900">{selectedPlan?.price.monthly}</span>
+                                <span className="text-2xl font-bold text-gray-900">
+                                    ₹{selectedPlan?.billingPeriod === 'yearly' 
+                                        ? selectedPlan?.price.yearly 
+                                        : selectedPlan?.price.monthly}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center mt-1">
+                                <span className="text-sm text-gray-500">Billing Period</span>
+                                <span className="text-sm font-medium text-gray-700 capitalize">
+                                    {selectedPlan?.billingPeriod || 'monthly'}
+                                </span>
                             </div>
                             <Badge className="mt-3 bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
                                 <Zap className="h-3 w-3 mr-1" />
@@ -126,14 +137,14 @@ const PaymentModal = ({ isOpen, onClose, selectedPlan }) => {
                                 </div>
                                 <h4 className="font-medium text-gray-900 text-lg">UPI Payment</h4>
                                 <p className="text-sm text-gray-500 mt-1">
-                                    You'll be redirected to Razorpay's secure payment gateway
+                                    You'll be redirected to PhonePe's secure payment gateway
                                 </p>
                             </div>
 
                             <Button
                                 className="w-full h-11 text-base font-medium"
                                 onClick={handleUPIPayment}
-                                disabled={isProcessing || !razorpayLoaded}
+                                disabled={isProcessing || !phonePeLoaded}
                             >
                                 {isProcessing ? (
                                     <>
@@ -141,7 +152,9 @@ const PaymentModal = ({ isOpen, onClose, selectedPlan }) => {
                                         Processing...
                                     </>
                                 ) : (
-                                    `Pay ${selectedPlan?.price.monthly} via UPI`
+                                    `Pay ₹${selectedPlan?.billingPeriod === 'yearly' 
+                                        ? selectedPlan?.price.yearly 
+                                        : selectedPlan?.price.monthly} via UPI`
                                 )}
                             </Button>
 

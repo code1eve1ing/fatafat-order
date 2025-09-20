@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import Shop from '../models/Shop';
+import Shopkeeper from '../models/Shopkeeper';
 import { sendOTP, verifyOTP } from '../services/otpService';
 import { AuthRequest } from '../middleware/auth';
 import OTP from '../models/OTP';
@@ -11,6 +13,7 @@ const generateToken = (id: string): string => {
     return jwt.sign(payload, process.env.JWT_SECRET!);
 };
 
+// /auth/signup
 export const signup = async (req: Request, res: Response) => {
     try {
         const errors = validationResult(req);
@@ -18,23 +21,59 @@ export const signup = async (req: Request, res: Response) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { mobile, email, password } = req.body;
+        const { mobile, email, password, user_name, shop_name, shop_category_id } = req.body;
 
-        // Check if user already exists
-        const existingUser = await User.findOne({ mobile });
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists with this mobile number' });
+        // 1. Check if user already exists with same mobile or email
+        const query: any[] = [{ mobile }]
+        if (email) {
+            query.push({ email })
         }
 
-        // Create unverified user
+        const existingUser = await User.findOne({ $or: query });
+        if (existingUser) {
+            const conflictField = existingUser.mobile === mobile ? 'mobile number' : 'email';
+            return res.status(400).json({ message: `User already exists with this ${conflictField}` });
+        }
+
+        // 2. Generate shop_code and save shop details
+        const shopCount = await Shop.countDocuments();
+        const shopCodeNumber = (shopCount + 1).toString().padStart(4, '0');
+        const shop_code = `SHOP-${shopCodeNumber}`;
+
+        const shop = new Shop({
+            name: shop_name,
+            category_id: shop_category_id,
+            shop_code: shop_code
+        });
+
+        await shop.save();
+
+        if (!shop._id) {
+            return res.status(400).json({ message: 'Failed to create shop. Please try again later.' });
+        }
+
+        // 3. Save available User details
         const user = new User({
-            mobile,
             email: email || undefined,
             password,
-            isVerified: false
+            name: user_name,
+            mobile,
+            is_verified: false
         });
 
         await user.save();
+
+        if (!user._id) {
+            return res.status(400).json({ message: 'Failed to create user account. Please try again later.' });
+        }
+
+        // 4. Save Shopkeeper details
+        const shopkeeper = new Shopkeeper({
+            user_id: user._id,
+            shop_id: shop._id
+        });
+
+        await shopkeeper.save();
 
         // Send OTP for verification
         // const otpSent = await sendOTP(mobile, email);
@@ -42,13 +81,15 @@ export const signup = async (req: Request, res: Response) => {
         //     return res.status(500).json({ message: 'Failed to send verification code' });
         // }
 
-        if (!user._id) {
-            return res.status(400).json({ message: 'Failed to create your account. Please try again later.' });
-        }
-
         res.status(201).json({
-            message: 'User created successfully. Please verify your account with the OTP sent to your mobile/email.',
+            message: 'Account created successfully. We have sent verification link to your mobile number' + (email ? ' and email' : ''),
             userId: user._id,
+            shop: {
+                _id: shop._id,
+                name: shop.name,
+                category_id: shop.category_id,
+                shop_code: shop.shop_code
+            },
             token: generateToken(user._id.toString()),
         });
     } catch (error: any) {
@@ -71,11 +112,11 @@ export const verifyAccount = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'User not found' });
         }
 
-        if (user.isVerified) {
+        if (user.is_verified) {
             return res.status(400).json({ message: 'Account is already verified' });
         }
 
-        user.isVerified = true;
+        user.is_verified = true;
         await user.save();
 
         // Clean up OTP record
@@ -93,7 +134,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
                 id: user._id,
                 mobile: user.mobile,
                 email: user.email,
-                isVerified: user.isVerified
+                // isVerified: user.isVerified
             }
         });
     } catch (error: any) {
@@ -111,7 +152,14 @@ export const login = async (req: Request, res: Response) => {
 
         const { identifier, password } = req.body;
 
-        const user = await User.findOne({ mobile: identifier });
+        // Find user by either email or mobile
+        const user = await User.findOne({
+            $or: [
+                { email: identifier },
+                { mobile: identifier }
+            ]
+        });
+
         if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
@@ -138,14 +186,23 @@ export const login = async (req: Request, res: Response) => {
         }
         const token = generateToken(user._id.toString());
 
+        // Find shopkeeper details to get shop information
+        const shopkeeper = await Shopkeeper.findOne({ user_id: user._id }).populate('shop_id');
+
+        if (!shopkeeper || !shopkeeper.shop_id) {
+            return res.status(400).json({ message: 'Shop information not found' });
+        }
         res.json({
             message: 'Login successful',
-            token,
+            userId: user._id,
+            shop: shopkeeper.shop_id,
+            token: token,
             user: {
                 id: user._id,
                 mobile: user.mobile,
                 email: user.email,
-                isVerified: user.isVerified
+                name: user.name,
+                // isVerified: user.isVerified
             }
         });
     } catch (error: any) {
@@ -163,9 +220,9 @@ export const resendOTP = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'User not found' });
         }
 
-        if (user.isVerified) {
-            return res.status(400).json({ message: 'Account is already verified' });
-        }
+        // if (user.isVerified) {
+        //     return res.status(400).json({ message: 'Account is already verified' });
+        // }
 
         const otpSent = await sendOTP(mobile, user.email);
         if (!otpSent) {
@@ -179,20 +236,41 @@ export const resendOTP = async (req: Request, res: Response) => {
     }
 };
 
+
+// /auth/me
 export const getMe = async (req: AuthRequest, res: Response) => {
     try {
-        const user = req.user;
-        res.json({
-            user: {
-                id: user!._id,
-                mobile: user!.mobile,
-                email: user!.email,
-                isVerified: user!.isVerified,
-                plan_id: user!.plan_id,
-                shop_id: user!.shop_id,
-                createdAt: user!.createdAt
+        const user_id = req?.user?._id
+        const user = await User.findById(user_id)
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        let shopkeeper = null
+        let shop = null
+        {
+            shopkeeper = await Shopkeeper.find({ user_id })
+            if (shopkeeper && shopkeeper?.length > 0) {
+                shop = await Shop.find({ _id: shopkeeper[0]?.shop_id })
+                // if (!shop) {
+                //     return res.status(404).json({ message: 'Shop not found' });
+                // }
             }
-        });
+        }
+
+        let customer = null
+
+        res.status(200).json({
+            user: {
+                _id: user._id,
+                mobile: user.mobile,
+                email: user.email,
+                name: user.name
+            },
+            role: shopkeeper ? 'shopkeeper' : 'customer',
+            shop: shop ? shop[0] : null,
+            customer
+        })
     } catch (error: any) {
         console.error('Get me error:', error);
         res.status(500).json({ message: 'Server error' });

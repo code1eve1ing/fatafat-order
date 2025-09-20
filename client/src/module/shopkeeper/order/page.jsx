@@ -46,13 +46,13 @@ import {
 import { useEffect, useState } from "react";
 import { Sidebar } from "../_common/Sidebar";
 import shopkeeperService from "@/services/shopkeeperService";
-import useShopkeeperStore from "@/store/shopkeeper";
+import useShopStore from "@/store/shop";
 import { OrderModal } from "./_common/OrderModal";
 import moment from "moment";
 
 export function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { setProducts, setMenuSections, setOrders, getOrders, updateOrder } = useShopkeeperStore()
+  const { setProducts, setMenuSections, setOrders, getOrders, updateOrder } = useShopStore()
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [sortBy, setSortBy] = useState("date_desc");
 
@@ -108,14 +108,6 @@ export function OrdersPage() {
     }
   };
 
-  useEffect(() => {
-    const products = shopkeeperService.getProducts()
-    setProducts(products)
-    const sections = shopkeeperService.getSections()
-    setMenuSections(sections)
-    const orders = shopkeeperService.getOrders()
-    setOrders(orders)
-  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
