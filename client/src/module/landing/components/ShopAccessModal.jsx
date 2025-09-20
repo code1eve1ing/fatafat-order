@@ -11,16 +11,47 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QrCode, Smartphone, Store, Search, ShoppingCart } from "lucide-react";
+import { productsApi } from "@/services/api";
+import useCustomerStore from "@/store/customer";
+import toast from "react-hot-toast";
 
 export function ShopAccessModal() {
     const navigate = useNavigate();
     const [activeView, setActiveView] = useState("options");
     const [shopCode, setShopCode] = useState("");
+    const [loading, setLoading] = useState(false);
+    const { setShop, setLoading: setStoreLoading, setError } = useCustomerStore();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (shopCode.trim()) {
-            navigate(`/shop/${shopCode.trim()}`);
+        if (!shopCode.trim()) {
+            toast.error("Please enter a shop code");
+            return;
+        }
+
+        setLoading(true);
+        setStoreLoading(true);
+        setError(null);
+
+        try {
+            const response = await productsApi.get(`/shops/by-code/${shopCode.trim()}`);
+            const { shop } = response.data;
+
+            // Save shop details to customer store
+            setShop(shop);
+
+            toast.success("Shop found! Redirecting...");
+
+            // Navigate to shop page with shop ID
+            navigate(`/customer/shop/${shop._id}`);
+        } catch (error) {
+            console.error('Error fetching shop:', error);
+            const errorMessage = error.response?.data?.message || 'Failed to find shop with this code';
+            setError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setLoading(false);
+            setStoreLoading(false);
         }
     };
 
@@ -125,8 +156,8 @@ export function ShopAccessModal() {
                                     <Store className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 </div>
                             </div>
-                            <Button type="submit" className="w-full mt-4">
-                                Continue to Shop
+                            <Button type="submit" className="w-full mt-4" disabled={loading}>
+                                {loading ? "Finding Shop..." : "Continue to Shop"}
                             </Button>
                         </form>
                         <div className="text-center text-sm text-muted-foreground">

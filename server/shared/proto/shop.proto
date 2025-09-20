@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package shop;
+
+// Shop validation service
+service ShopService {
+  // Validate shop code and return shop details
+  rpc ValidateShopCode(ValidateShopCodeRequest) returns (ValidateShopCodeResponse);
+}
+
+// Request message for validating shop code
+message ValidateShopCodeRequest {
+  string shop_code = 1;
+}
+
+// Response message for shop validation
+message ValidateShopCodeResponse {
+  bool success = 1;
+  string message = 2;
+  Shop shop = 3;
+}
+
+// Shop details message
+message Shop {
+  string id = 1;
+  string name = 2;
+  string shop_code = 3;
+  string category_id = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}

@@ -19,6 +19,7 @@ import { CategoriesPage } from "./module/admin/category/page";
 import InitialDataLoader from "./components/common/InitialDataLoader";
 import ShopkeeperManager from "./module/shopkeeper/wrappers/ShopkeeperManager";
 import StateViewer from "./components/common/StateViewer";
+import { ShopDataWrapper } from "./module/customer/wrappers/ShopDataWrapper";
 
 // Unused 
 // import { ShopAccessPage } from "./module/customer/shopAccess/page";
@@ -83,9 +84,9 @@ function App() {
             {/* Customer Routes */}
             <Route path="/customer/nearby-shops" element={<NearbyShopsPage />} />
             {/* TODO: shop login/registration reminder popup & view cart floaring icon  */}
-            <Route path="/customer/shop/:shopId" element={<ShopPage />} />
-            <Route path="/customer/cart" element={<CartPage />} />
-            <Route path="/customer/checkout" element={<CheckoutPage />} />
+            <Route path="/customer/shop/:shopId" element={<ShopDataWrapper><ShopPage /></ShopDataWrapper>} />
+            <Route path="/customer/shop/:shopId/cart" element={<ShopDataWrapper><CartPage /></ShopDataWrapper>} />
+            <Route path="/customer/shop/:shopId/checkout" element={<ShopDataWrapper><CheckoutPage /></ShopDataWrapper>} />
 
             {/* Shopkeeper Routes */}
             <Route path="/shop/onboarding" element={<ShopkeeperManager><ShopOnboardingPage /></ShopkeeperManager>} />

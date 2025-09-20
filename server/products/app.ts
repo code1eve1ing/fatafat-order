@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import menuSectionRoutes from './routes/menuSection';
 import productRoutes from './routes/product';
+import shopRoutes from './routes/shop';
 import { generalLimiter } from './middleware/rateLimit';
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // Routes
 app.use('/api/menu-sections', menuSectionRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/shops', shopRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

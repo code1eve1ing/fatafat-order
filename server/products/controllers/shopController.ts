@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-
-// Import Shop model from auth module - adjust path as needed
-// Assuming the auth module is at the same level as products
-import Shop from '../../auth/models/Shop';
+import { validateShopCode } from '../services/grpcClient';
 
 // GET /api/shops/by-code/:shop_code
 export const getShopByCode = async (req: Request, res: Response) => {
@@ -19,19 +16,22 @@ export const getShopByCode = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Shop code is required' });
         }
 
-        const shop = await Shop.findOne({ shop_code }).populate('category_id');
+        // Use gRPC client to validate shop code
+        const shopValidationResult = await validateShopCode(shop_code);
 
-        if (!shop) {
-            return res.status(404).json({ message: 'Shop not found with the provided shop code' });
+        if (!shopValidationResult.success || !shopValidationResult.shop) {
+            return res.status(404).json({ 
+                message: shopValidationResult.message || 'Shop not found with the provided shop code' 
+            });
         }
 
         res.status(200).json({
             message: 'Shop found successfully',
             shop: {
-                _id: shop._id,
-                name: shop.name,
-                shop_code: shop.shop_code,
-                category_id: shop.category_id
+                _id: shopValidationResult.shop.id,
+                name: shopValidationResult.shop.name,
+                shop_code: shopValidationResult.shop.shop_code,
+                category_id: shopValidationResult.shop.category_id
             }
         });
     } catch (error: any) {
@@ -41,19 +41,15 @@ export const getShopByCode = async (req: Request, res: Response) => {
 };
 
 // GET /api/shops (optional - get all shops)
+// Note: This endpoint is not implemented via gRPC as it would require a different service method
+// For now, returning a message indicating the limitation
 export const getAllShops = async (req: Request, res: Response) => {
     try {
-        const shops = await Shop.find().populate('category_id');
-
-        res.status(200).json({
-            message: 'Shops retrieved successfully',
-            count: shops.length,
-            shops: shops.map(shop => ({
-                _id: shop._id,
-                name: shop.name,
-                shop_code: shop.shop_code,
-                category_id: shop.category_id
-            }))
+        res.status(501).json({
+            message: 'Get all shops endpoint not implemented via gRPC. Use shop code lookup instead.',
+            available_endpoints: [
+                'GET /api/shops/by-code/:shop_code - Find shop by shop code'
+            ]
         });
     } catch (error: any) {
         console.error('Get all shops error:', error);
