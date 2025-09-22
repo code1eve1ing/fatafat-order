@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { Modal } from '../ui/modal';
 import useAuthStore from '@/store/auth';
 import useShopStore from '@/store/shop';
+import useCustomerStore from '@/store/customer';
 
 const StateViewer = () => {
     const [isOpen, setIsOpen] = useState(false);
     const authState = useAuthStore();
     const shopState = useShopStore();
+    const customerState = useCustomerStore();
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -56,6 +58,7 @@ const StateViewer = () => {
             <div className="space-y-4">
                 {renderStore('Auth Store', authState)}
                 {renderStore('Shop Store', shopState)}
+                {renderStore('Customer Store', customerState)}
             </div>
         </Modal>
     );

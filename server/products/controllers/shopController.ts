@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { validateShopCode } from '../services/grpcClient';
 
-// GET /api/shops/by-code/:shop_code
+// GET /api/shops/by-code/:shop_code - supports both shop code (SHOP-XXXX) and shop ID
 export const getShopByCode = async (req: Request, res: Response) => {
     try {
         const errors = validationResult(req);
@@ -13,15 +13,25 @@ export const getShopByCode = async (req: Request, res: Response) => {
         const { shop_code } = req.params;
 
         if (!shop_code) {
-            return res.status(400).json({ message: 'Shop code is required' });
+            return res.status(400).json({ message: 'Shop code or ID is required' });
         }
 
-        // Use gRPC client to validate shop code
+        // Check if the parameter is a MongoDB ObjectId (24 hex characters) or shop code (SHOP-XXXX format)
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(shop_code);
+        const isShopCode = /^SHOP-\d{4}$/.test(shop_code);
+
+        if (!isObjectId && !isShopCode) {
+            return res.status(400).json({ 
+                message: 'Invalid format. Provide either a valid shop code (SHOP-XXXX) or shop ID' 
+            });
+        }
+
+        // Use gRPC client to validate shop code or ID
         const shopValidationResult = await validateShopCode(shop_code);
 
         if (!shopValidationResult.success || !shopValidationResult.shop) {
             return res.status(404).json({ 
-                message: shopValidationResult.message || 'Shop not found with the provided shop code' 
+                message: shopValidationResult.message || 'Shop not found with the provided identifier' 
             });
         }
 
@@ -35,7 +45,7 @@ export const getShopByCode = async (req: Request, res: Response) => {
             }
         });
     } catch (error: any) {
-        console.error('Get shop by code error:', error);
+        console.error('Get shop by code/ID error:', error);
         res.status(500).json({ message: 'Server error while fetching shop' });
     }
 };

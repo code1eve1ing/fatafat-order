@@ -59,7 +59,14 @@ export const validateShopCode = [
     param('shop_code')
         .trim()
         .notEmpty()
-        .withMessage('Shop code is required')
-        .matches(/^SHOP-\d{4}$/)
-        .withMessage('Shop code must be in format SHOP-XXXX where XXXX is 4 digits')
+        .withMessage('Shop code or ID is required')
+        .custom((value) => {
+            const isObjectId = /^[0-9a-fA-F]{24}$/.test(value);
+            const isShopCode = /^SHOP-\d{4}$/.test(value);
+            
+            if (!isObjectId && !isShopCode) {
+                throw new Error('Must be either a valid shop code (SHOP-XXXX) or a valid shop ID');
+            }
+            return true;
+        })
 ];

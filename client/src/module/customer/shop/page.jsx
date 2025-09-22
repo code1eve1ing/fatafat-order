@@ -13,17 +13,28 @@ import { Badge } from "@/components/ui/badge";
 import { Search, ShoppingCart, ChevronRight, User, HelpCircle, Star, MapPin, Clock, Store } from "lucide-react";
 import { LoginRegisterPopup } from "../_common/LoginRegisterPopup";
 import { FloatingChat } from "../_common/FloatingChat";
+import useCustomerStore from "@/store/customer";
 
 export function ShopPage() {
     const { shopId } = useParams();
     const navigate = useNavigate();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [activeTab, setActiveTab] = useState("products");
     const [showLoginPopup, setShowLoginPopup] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [shop, setShop] = useState(null);
-    const [products, setProducts] = useState([]);
+    const [selectedSectionId, setSelectedSectionId] = useState(null);
     const [cart, setCart] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const { 
+        getShop, 
+        getProducts, 
+        getMenuSections, 
+        addToCart: addToStoreCart 
+    } = useCustomerStore();
+    
+    const shop = getShop();
+    const products = getProducts(searchQuery, selectedSectionId);
+    const menuSections = getMenuSections();
 
     useEffect(() => {
         // Simulate API calls to fetch shop and products
@@ -32,55 +43,8 @@ export function ShopPage() {
             try {
                 // Fetch shop details
                 await new Promise(resolve => setTimeout(resolve, 500));
-                setShop({
-                    id: shopId,
-                    name: "QuickMart Grocery",
-                    description: "Your neighborhood grocery store with fresh produce and daily essentials",
-                    rating: 4.5,
-                    distance: "0.5 km",
-                    categories: ["Groceries", "Daily Needs"],
-                    open: true,
-                    hours: "8:00 AM - 10:00 PM",
-                    address: "123 Main Street, Cityville",
-                    image: "/shop1.jpg"
-                });
-
-                // Fetch products
-                await new Promise(resolve => setTimeout(resolve, 500));
-                setProducts([
-                    {
-                        id: "prod-1",
-                        name: "Fresh Apples",
-                        price: 2.99,
-                        description: "Crisp and juicy, 1kg pack",
-                        category: "Fruits",
-                        image: "/apple.jpg"
-                    },
-                    {
-                        id: "prod-2",
-                        name: "Whole Wheat Bread",
-                        price: 3.49,
-                        description: "Freshly baked, 500g loaf",
-                        category: "Bakery",
-                        image: "/bread.jpg"
-                    },
-                    {
-                        id: "prod-3",
-                        name: "Organic Milk",
-                        price: 4.99,
-                        description: "1 liter, pasteurized",
-                        category: "Dairy",
-                        image: "/milk.jpg"
-                    },
-                    {
-                        id: "prod-4",
-                        name: "Eggs (Dozen)",
-                        price: 3.99,
-                        description: "Farm fresh, large eggs",
-                        category: "Dairy",
-                        image: "/eggs.jpg"
-                    }
-                ]);
+                // Shop data is now loaded via ShopDataWrapper
+                // No need to set mock data here
             } finally {
                 setIsLoading(false);
             }
@@ -89,24 +53,31 @@ export function ShopPage() {
         fetchData();
     }, [shopId]);
 
-    const filteredProducts = products.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase()))
+    // Products are already filtered by the store's getProducts function
 
     const addToCart = (product) => {
-        setCart(prevCart => {
-            const existingItem = prevCart.find(item => item.id === product.id);
-            if (existingItem) {
-                return prevCart.map(item =>
-                    item.id === product.id
+        addToStoreCart(product, 1);
+        // Also update local cart for immediate UI feedback
+        setCart(prev => {
+            const existing = prev.find(item => item._id === product._id);
+            if (existing) {
+                return prev.map(item => 
+                    item._id === product._id 
                         ? { ...item, quantity: item.quantity + 1 }
                         : item
                 );
-            } else {
-                return [...prevCart, { ...product, quantity: 1 }];
             }
+            return [...prev, { ...product, quantity: 1 }];
         });
+    };
+
+    const handleSectionFilter = (sectionId) => {
+        setSelectedSectionId(sectionId === selectedSectionId ? null : sectionId);
+    };
+
+    const resetFilters = () => {
+        setSelectedSectionId(null);
+        setSearchQuery("");
     };
 
     const removeFromCart = (productId) => {
@@ -211,12 +182,35 @@ export function ShopPage() {
                                         )}
                                     </div>
                                     <p className="text-muted-foreground mb-4">{shop.description}</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {shop.categories.map(category => (
-                                            <Badge key={category} variant="secondary">
-                                                {category}
-                                            </Badge>
+                                    {/* Menu Sections Filter */}
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        <Button
+                                            variant={selectedSectionId === null ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setSelectedSectionId(null)}
+                                        >
+                                            All Items
+                                        </Button>
+                                        {menuSections.map(section => (
+                                            <Button
+                                                key={section._id}
+                                                variant={selectedSectionId === section._id ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => handleSectionFilter(section._id)}
+                                            >
+                                                {section.name}
+                                            </Button>
                                         ))}
+                                        {(selectedSectionId || searchQuery) && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={resetFilters}
+                                                className="text-red-600 hover:text-red-700"
+                                            >
+                                                Reset Filters
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -237,9 +231,9 @@ export function ShopPage() {
 
                         {/* Products Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredProducts.length > 0 ? (
-                                filteredProducts.map((product) => (
-                                    <Card key={product.id} className="hover:shadow-md transition-shadow">
+                            {products.length > 0 ? (
+                                products.map((product) => (
+                                    <Card key={product._id} className="hover:shadow-md transition-shadow">
                                         <CardHeader className="p-0">
                                             <div className="h-40 bg-gray-200 rounded-t-lg overflow-hidden">
                                                 {/* Product image would go here */}
@@ -251,10 +245,17 @@ export function ShopPage() {
                                         <CardContent className="pt-4">
                                             <CardTitle className="mb-1">{product.name}</CardTitle>
                                             <p className="text-muted-foreground text-sm mb-2">{product.description}</p>
-                                            <Badge variant="outline">{product.category}</Badge>
+                                            {!selectedSectionId && product.menu_section_id && (
+                                                <Badge variant="outline">
+                                                    {typeof product.menu_section_id === 'object' 
+                                                        ? product.menu_section_id.name 
+                                                        : menuSections.find(s => s._id === product.menu_section_id)?.name || 'Unknown Section'
+                                                    }
+                                                </Badge>
+                                            )}
                                         </CardContent>
                                         <CardFooter className="flex justify-between items-center">
-                                            <span className="font-bold">${product.price.toFixed(2)}</span>
+                                            <span className="font-bold">₹{product.price?.toFixed(2) || '0.00'}</span>
                                             <Button
                                                 size="sm"
                                                 onClick={() => addToCart(product)}
@@ -266,13 +267,23 @@ export function ShopPage() {
                                 ))
                             ) : (
                                 <div className="col-span-full text-center py-12">
-                                    <div className="mx-auto max-w-md">
-                                        <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                        <h3 className="text-lg font-medium mb-2">No products found</h3>
-                                        <p className="text-muted-foreground">
-                                            Try adjusting your search to find what you're looking for.
-                                        </p>
-                                    </div>
+                                    <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                                    <p className="text-gray-500">
+                                        {searchQuery || selectedSectionId 
+                                            ? 'Try adjusting your filters or search terms.' 
+                                            : 'No products available at the moment.'
+                                        }
+                                    </p>
+                                    {(searchQuery || selectedSectionId) && (
+                                        <Button 
+                                            variant="outline" 
+                                            onClick={resetFilters}
+                                            className="mt-4"
+                                        >
+                                            Clear Filters
+                                        </Button>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -298,7 +309,7 @@ export function ShopPage() {
             <LoginRegisterPopup
                 open={showLoginPopup}
                 onOpenChange={setShowLoginPopup}
-                onSuccess={() => setIsLoggedIn(true)}
+                onSuccess={() => console.log('Login successful')}
             />
         </div>
     );

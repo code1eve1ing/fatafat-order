@@ -15,7 +15,7 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const shopProto = grpc.loadPackageDefinition(packageDefinition).shop as any;
 
-// Implement the validateShopCode function
+// Implement the validateShopCode function (supports both shop code and shop ID)
 export const validateShopCode = async (call: any, callback: any) => {
     try {
         const { shop_code } = call.request;
@@ -23,18 +23,27 @@ export const validateShopCode = async (call: any, callback: any) => {
         if (!shop_code) {
             return callback(null, {
                 success: false,
-                message: 'Shop code is required',
+                message: 'Shop code or ID is required',
                 shop: null
             });
         }
 
-        // Find shop by shop_code
-        const shop: any = await Shop.findOne({ shop_code }).populate('category_id');
+        // Check if the parameter is a MongoDB ObjectId or shop code
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(shop_code);
+        let shop: any;
+
+        if (isObjectId) {
+            // Find shop by _id
+            shop = await Shop.findById(shop_code).populate('category_id');
+        } else {
+            // Find shop by shop_code
+            shop = await Shop.findOne({ shop_code }).populate('category_id');
+        }
 
         if (!shop) {
             return callback(null, {
                 success: false,
-                message: 'Shop not found with the provided shop code',
+                message: `Shop not found with the provided ${isObjectId ? 'ID' : 'shop code'}`,
                 shop: null
             });
         }
