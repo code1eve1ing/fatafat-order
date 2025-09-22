@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, ChevronRight, User, HelpCircle, Star, MapPin, Clock, Store } from "lucide-react";
+import { Search, ShoppingCart, ChevronRight, User, HelpCircle, Star, MapPin, Clock, Store, Plus, Trash2 } from "lucide-react";
 import { LoginRegisterPopup } from "../_common/LoginRegisterPopup";
 import { FloatingChat } from "../_common/FloatingChat";
 import useCustomerStore from "@/store/customer";
@@ -25,13 +25,13 @@ export function ShopPage() {
     const [cart, setCart] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const { 
-        getShop, 
-        getProducts, 
-        getMenuSections, 
-        addToCart: addToStoreCart 
+    const {
+        getShop,
+        getProducts,
+        getMenuSections,
+        addToCart: addToStoreCart
     } = useCustomerStore();
-    
+
     const shop = getShop();
     const products = getProducts(searchQuery, selectedSectionId);
     const menuSections = getMenuSections();
@@ -61,14 +61,18 @@ export function ShopPage() {
         setCart(prev => {
             const existing = prev.find(item => item._id === product._id);
             if (existing) {
-                return prev.map(item => 
-                    item._id === product._id 
+                return prev.map(item =>
+                    item._id === product._id
                         ? { ...item, quantity: item.quantity + 1 }
                         : item
                 );
             }
             return [...prev, { ...product, quantity: 1 }];
         });
+    };
+
+    const removeFromCart = (productId) => {
+        setCart(prev => prev.filter(item => item._id !== productId));
     };
 
     const handleSectionFilter = (sectionId) => {
@@ -78,10 +82,6 @@ export function ShopPage() {
     const resetFilters = () => {
         setSelectedSectionId(null);
         setSearchQuery("");
-    };
-
-    const removeFromCart = (productId) => {
-        setCart(prevCart => prevCart.filter(item => item.id !== productId));
     };
 
     const updateQuantity = (productId, newQuantity) => {
@@ -229,55 +229,83 @@ export function ShopPage() {
                             </div>
                         </div>
 
-                        {/* Products Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {/* Products List */}
+                        <div className="divide-y divide-gray-100">
                             {products.length > 0 ? (
                                 products.map((product) => (
-                                    <Card key={product._id} className="hover:shadow-md transition-shadow">
-                                        <CardHeader className="p-0">
-                                            <div className="h-40 bg-gray-200 rounded-t-lg overflow-hidden">
-                                                {/* Product image would go here */}
+                                    <div key={product._id} className="py-3 hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-center">
+                                            {/* Product Image */}
+                                            <div className="w-24 h-24 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden mr-4">
                                                 <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                                                    <ShoppingCart className="h-12 w-12 text-gray-400" />
+                                                    <ShoppingCart className="h-8 w-8 text-gray-400" />
+
                                                 </div>
                                             </div>
-                                        </CardHeader>
-                                        <CardContent className="pt-4">
-                                            <CardTitle className="mb-1">{product.name}</CardTitle>
-                                            <p className="text-muted-foreground text-sm mb-2">{product.description}</p>
-                                            {!selectedSectionId && product.menu_section_id && (
-                                                <Badge variant="outline">
-                                                    {typeof product.menu_section_id === 'object' 
-                                                        ? product.menu_section_id.name 
-                                                        : menuSections.find(s => s._id === product.menu_section_id)?.name || 'Unknown Section'
-                                                    }
-                                                </Badge>
-                                            )}
-                                        </CardContent>
-                                        <CardFooter className="flex justify-between items-center">
-                                            <span className="font-bold">₹{product.price?.toFixed(2) || '0.00'}</span>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => addToCart(product)}
-                                            >
-                                                Add to Cart
-                                            </Button>
-                                        </CardFooter>
-                                    </Card>
+
+                                            {/* Product Details */}
+                                            <div className="flex-1 min-w-0">
+                                                <CardTitle className="text-base font-medium mb-1 truncate">{product.name}</CardTitle>
+                                                <p className="text-muted-foreground text-sm mb-2 line-clamp-2">{product.description}</p>
+                                                {!selectedSectionId && product.menu_section_id && (
+                                                    <div className="mt-1">
+                                                        <Badge variant="outline" className="text-xs">
+                                                            {typeof product.menu_section_id === 'object'
+                                                                ? product.menu_section_id.name
+                                                                : menuSections.find(s => s._id === product.menu_section_id)?.name || 'Unknown Section'
+                                                            }
+                                                        </Badge>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Price and Add to Cart */}
+                                            <div className="flex flex-col items-end">
+                                                <span className="font-bold text-base mb-2">₹{product.price?.toFixed(2) || '0.00'}</span>
+                                                <div className="flex items-center">
+                                                    {cart.some(item => item._id === product._id) && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-10 w-10 text-red-500 hover:bg-red-50 mr-1"
+                                                            onClick={() => removeFromCart(product._id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    <div className="relative">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="h-10 w-10 rounded-lg"
+                                                            onClick={() => addToCart(product)}
+                                                        >
+                                                            <Plus className="h-4 w-4" />
+                                                        </Button>
+                                                        {cart.some(item => item._id === product._id) && (
+                                                            <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                                                {cart.find(item => item._id === product._id)?.quantity || 1}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 ))
                             ) : (
                                 <div className="col-span-full text-center py-12">
                                     <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                                     <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
                                     <p className="text-gray-500">
-                                        {searchQuery || selectedSectionId 
-                                            ? 'Try adjusting your filters or search terms.' 
+                                        {searchQuery || selectedSectionId
+                                            ? 'Try adjusting your filters or search terms.'
                                             : 'No products available at the moment.'
                                         }
                                     </p>
                                     {(searchQuery || selectedSectionId) && (
-                                        <Button 
-                                            variant="outline" 
+                                        <Button
+                                            variant="outline"
                                             onClick={resetFilters}
                                             className="mt-4"
                                         >
