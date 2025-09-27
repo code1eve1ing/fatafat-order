@@ -48,7 +48,7 @@ const InitialRouteHandler = ({ children }) => {
                         navigate('/shop/dashboard');
                     }
                 } else {
-                    navigate('/');
+                    // navigate('/');
                 }
             }
         }

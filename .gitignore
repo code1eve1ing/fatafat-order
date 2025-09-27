@@ -5,7 +5,9 @@ secret
 
 client/node_modules
 client/.env
+server/orders/.env
 server/auth/.env
 server/products/.env
+server/orders/node_modules
 server/auth/node_modules
 server/products/node_modules

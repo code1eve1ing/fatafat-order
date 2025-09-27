@@ -5,6 +5,7 @@ import { validateShopCode } from '../services/grpcClient';
 // GET /api/shops/by-code/:shop_code - supports both shop code (SHOP-XXXX) and shop ID
 export const getShopByCode = async (req: Request, res: Response) => {
     try {
+        console.log("REQUEST", req)
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -21,8 +22,8 @@ export const getShopByCode = async (req: Request, res: Response) => {
         const isShopCode = /^SHOP-\d{4}$/.test(shop_code);
 
         if (!isObjectId && !isShopCode) {
-            return res.status(400).json({ 
-                message: 'Invalid format. Provide either a valid shop code (SHOP-XXXX) or shop ID' 
+            return res.status(400).json({
+                message: 'Invalid format. Provide either a valid shop code (SHOP-XXXX) or shop ID'
             });
         }
 
@@ -30,8 +31,8 @@ export const getShopByCode = async (req: Request, res: Response) => {
         const shopValidationResult = await validateShopCode(shop_code);
 
         if (!shopValidationResult.success || !shopValidationResult.shop) {
-            return res.status(404).json({ 
-                message: shopValidationResult.message || 'Shop not found with the provided identifier' 
+            return res.status(404).json({
+                message: shopValidationResult.message || 'Shop not found with the provided identifier'
             });
         }
 

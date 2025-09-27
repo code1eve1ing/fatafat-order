@@ -52,9 +52,17 @@ import moment from "moment";
 
 export function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { setProducts, setMenuSections, setOrders, getOrders, updateOrder } = useShopStore()
+  const { setProducts, setMenuSections, setOrders, getOrders, updateOrder, getShopDetails, fetchOrdersByShop, loading } = useShopStore()
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [sortBy, setSortBy] = useState("date_desc");
+  const shopDetails = getShopDetails()
+
+  // Fetch orders on component mount
+  useEffect(() => {
+    if (shopDetails?._id) {
+      fetchOrdersByShop();
+    }
+  }, [shopDetails?._id, fetchOrdersByShop]);
 
   const handleStatusChange = async (order, newStatus) => {
     order.status = newStatus
@@ -67,7 +75,9 @@ export function OrdersPage() {
   const statusOptions = [
     { id: "all", label: "All Status" },
     { id: "pending", label: "Pending" },
-    { id: "processing", label: "Processing" },
+    { id: "confirmed", label: "Confirmed" },
+    { id: "preparing", label: "Preparing" },
+    { id: "ready", label: "Ready" },
     { id: "completed", label: "Completed" },
     { id: "cancelled", label: "Cancelled" },
   ];
@@ -97,14 +107,18 @@ export function OrdersPage() {
     switch (status) {
       case "completed":
         return <Badge className="bg-green-100 text-green-800">Completed <ChevronDown className="h-3 w-3 opacity-50" /></Badge>;
-      case "processing":
-        return <Badge className="bg-blue-100 text-blue-800">Processing <ChevronDown className="h-3 w-3 opacity-50" /></Badge>;
+      case "confirmed":
+        return <Badge className="bg-blue-100 text-blue-800">Confirmed <ChevronDown className="h-3 w-3 opacity-50" /></Badge>;
+      case "preparing":
+        return <Badge className="bg-orange-100 text-orange-800">Preparing <ChevronDown className="h-3 w-3 opacity-50" /></Badge>;
+      case "ready":
+        return <Badge className="bg-purple-100 text-purple-800">Ready <ChevronDown className="h-3 w-3 opacity-50" /></Badge>;
       case "pending":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending <ChevronDown className="h-3 w-3 opacity-50" /></Badge>;
       case "cancelled":
         return <Badge className="bg-red-100 text-red-800">Cancelled <ChevronDown className="h-3 w-3 opacity-50" /></Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800">Processing <ChevronDown className="h-3 w-3 opacity-50" /></Badge>;
+        return <Badge className="bg-gray-100 text-gray-800">Pending <ChevronDown className="h-3 w-3 opacity-50" /></Badge>;
     }
   };
 
@@ -185,11 +199,17 @@ export function OrdersPage() {
             <CardHeader>
               <CardTitle>Recent Orders</CardTitle>
               <CardDescription>
-                {orders.length} orders found
+                {loading ? 'Loading orders...' : `${orders.length} orders found`}
               </CardDescription>
             </CardHeader>
             {
-              orders.length > 0 ? (
+              loading ? (
+                <CardContent>
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-gray-500">Loading orders...</div>
+                  </div>
+                </CardContent>
+              ) : orders.length > 0 ? (
                 <CardContent>
                   <div className="overflow-x-auto">
                     <Table>
@@ -207,18 +227,26 @@ export function OrdersPage() {
                       <TableBody>
                         {orders.map((order) => (
                           <TableRow key={order._id}>
-                            <TableCell><p className="max-w-20 truncate" onClick={() => { alert(order.items.map(i => i.name).join(', \n').concat("\n\n", 'Notes: \n', order.notes)) }} dangerouslySetInnerHTML={{ __html: order.items.map(i => i.name).join(', <br/>') }}></p></TableCell>
-                            <TableCell>₹ {order.totalAmount}</TableCell>
+                            <TableCell>
+                              <p className="max-w-20 truncate" 
+                                 onClick={() => { 
+                                   const itemsList = order.items.map(i => `${i.product_name} (x${i.quantity})`).join('\n');
+                                   const customerInfo = `Customer: ${order.customer_name || 'N/A'}${order.customer_email ? `\nEmail: ${order.customer_email}` : ''}${order.customer_mobile ? `\nMobile: ${order.customer_mobile}` : ''}`;
+                                   alert(`${itemsList}\n\n${customerInfo}\n\nNotes: ${order.notes || 'None'}`) 
+                                 }} 
+                                 dangerouslySetInnerHTML={{ __html: order.items.map(i => `${i.product_name} (x${i.quantity})`).join(', <br/>') }}>
+                              </p>
+                            </TableCell>
+                            <TableCell>₹ {order.total_amount}</TableCell>
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" className="h-6 p-0 hover:bg-transparent">
                                     {getStatusBadge(order.status)}
-
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start" className="w-40">
-                                  {['pending', 'processing', 'completed', 'cancelled'].map((status) => (
+                                  {['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'].map((status) => (
                                     <DropdownMenuItem
                                       key={status}
                                       className="flex items-center justify-between"
@@ -231,8 +259,8 @@ export function OrdersPage() {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
-                            <TableCell>{moment(order.time, "HH-mm").format("hh:mm A")}</TableCell>
-                            <TableCell>{order._id}</TableCell>
+                            <TableCell>{moment(order.created_at).format("hh:mm A")}</TableCell>
+                            <TableCell>{order.order_id || order._id}</TableCell>
                             {/* <TableCell>{moment(order.date, "DD-MM-YYYY").format("DD/MM/YYYY")}</TableCell> */}
                             {/* <TableCell className="text-right">
                               <DropdownMenu>

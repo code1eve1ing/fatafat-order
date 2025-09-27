@@ -113,7 +113,7 @@ export function ShopPage() {
                             variant="outline"
                             size="sm"
                             className="relative"
-                            onClick={() => navigate(`/shop/${shopId}/cart`)}
+                            onClick={() => navigate(`/customer/shop/${shopId}/cart`)}
                         >
                             <ShoppingCart className="h-4 w-4 mr-2" />
                             Cart

@@ -11,6 +11,7 @@ import { NearbyShopsPage } from "./module/customer/NearbyShops/page";
 import { ShopPage } from "./module/customer/shop/page";
 import { CartPage } from "./module/customer/cart/page";
 import { CheckoutPage } from "./module/customer/checkout/page";
+import { OrderConfirmationPage } from "./module/customer/order-confirmation/page";
 import { AboutPage } from "./module/landing/trust-pages/common";
 import { ContactPage, PrivacyPolicyPage, RefundPolicyPage, TermsConditionsPage } from "./module/landing/trust-pages/common";
 import { Toaster } from 'react-hot-toast';
@@ -87,6 +88,7 @@ function App() {
             <Route path="/customer/shop/:shopId" element={<ShopDataWrapper><ShopPage /></ShopDataWrapper>} />
             <Route path="/customer/shop/:shopId/cart" element={<ShopDataWrapper><CartPage /></ShopDataWrapper>} />
             <Route path="/customer/shop/:shopId/checkout" element={<ShopDataWrapper><CheckoutPage /></ShopDataWrapper>} />
+            <Route path="/customer/shop/:shopId/order-confirmation" element={<ShopDataWrapper><OrderConfirmationPage /></ShopDataWrapper>} />
 
             {/* Shopkeeper Routes */}
             <Route path="/shop/onboarding" element={<ShopkeeperManager><ShopOnboardingPage /></ShopkeeperManager>} />

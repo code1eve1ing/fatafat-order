@@ -19,6 +19,15 @@ const productsApi = axios.create({
     },
 });
 
+// Create axios instance for orders service
+const ordersApi = axios.create({
+    baseURL: import.meta.env.VITE_ORDERS_API_URL || 'http://localhost:5002/api',
+    timeout: 10000,
+    headers: {
+        'Content-Type': 'application/json'
+    },
+});
+
 // Common request interceptor function
 const addAuthInterceptor = (apiInstance) => {
     apiInstance.interceptors.request.use(
@@ -88,11 +97,13 @@ const addResponseInterceptor = (apiInstance) => {
     );
 };
 
-// Apply interceptors to both API instances
+// Apply interceptors to all API instances
 addAuthInterceptor(api);
 addResponseInterceptor(api);
 addAuthInterceptor(productsApi);
 addResponseInterceptor(productsApi);
+addAuthInterceptor(ordersApi);
+addResponseInterceptor(ordersApi);
 
 export default api;
-export { productsApi };
+export { productsApi, ordersApi };

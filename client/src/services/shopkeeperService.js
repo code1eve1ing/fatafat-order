@@ -1,5 +1,5 @@
 import { FREE_TRIAL } from "@/lib/constants/user";
-import { productsApi } from './api';
+import { productsApi, ordersApi } from './api';
 import useShopStore from '@/store/shop';
 
 class ShopkeeperService {
@@ -61,7 +61,7 @@ class ShopkeeperService {
         }
     }
 
-    updateOrder(orderData, callback) {
+    async updateOrder(orderData, callback) {
         const isFreeTrial = localStorage.getItem("accountType") === FREE_TRIAL;
         if (isFreeTrial) {
             const savedOrders = localStorage.getItem("savedOrders") || "[]";
@@ -70,7 +70,17 @@ class ShopkeeperService {
             localStorage.setItem("savedOrders", JSON.stringify(parsedOrders));
             callback(orderData)
         } else {
-            // TODO: save into api 
+            try {
+                const orderId = orderData._id;
+                console.log(orderData);
+                const response = await ordersApi.patch(`/orders/${orderId}/status`, {
+                    status: orderData.status
+                });
+                callback(response.data.data);
+            } catch (error) {
+                console.error('Error updating order:', error);
+                throw error;
+            }
         }
     }
 
@@ -158,14 +168,27 @@ class ShopkeeperService {
         }
     }
 
-    getOrders() {
+    async getOrders() {
         const isFreeTrial = localStorage.getItem("accountType") === FREE_TRIAL;
         if (isFreeTrial) {
             const savedOrders = localStorage.getItem("savedOrders") || "[]";
             return JSON.parse(savedOrders);
         } else {
-            // TODO: get from api 
-            return [];
+            try {
+                const shopStore = useShopStore.getState();
+                const shopId = shopStore.shopDetails?._id;
+
+                if (!shopId) {
+                    console.warn('No shop ID found');
+                    return [];
+                }
+
+                const response = await ordersApi.get(`/orders/shop/${shopId}`);
+                return response.data.data.orders || [];
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                return [];
+            }
         }
     }
 

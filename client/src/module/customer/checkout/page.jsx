@@ -10,44 +10,122 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ShoppingCart, ChevronRight, User, HelpCircle, ArrowLeft, CreditCard, QrCode, Wallet, Store } from "lucide-react";
+import { ShoppingCart, ChevronRight, User, HelpCircle, ArrowLeft, CreditCard, QrCode, Wallet, Store, Loader2, CheckCircle } from "lucide-react";
 import { LoginRegisterPopup } from "../_common/LoginRegisterPopup";
 import { FloatingChat } from "../_common/FloatingChat";
-import { useState } from "react";
+import { OTPVerification } from "../../../components/common/OTPVerification";
+import { useState, useEffect } from "react";
+import useAuthStore from "../../../store/auth";
+import useCustomerStore from "../../../store/customer";
+import orderService from "../../../services/orderService";
+import toast from "react-hot-toast";
 
 export function CheckoutPage() {
     const { shopId } = useParams();
     const navigate = useNavigate();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [showLoginPopup, setShowLoginPopup] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState("card");
-    const [deliveryOption, setDeliveryOption] = useState("delivery");
+    const [paymentMethod, setPaymentMethod] = useState("cash");
+    const [deliveryOption, setDeliveryOption] = useState("pickup");
+    const [showOTPVerification, setShowOTPVerification] = useState(false);
+    const [verifiedContact, setVerifiedContact] = useState(null);
+    const [customerName, setCustomerName] = useState("");
+    const [orderNotes, setOrderNotes] = useState("");
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-    // Mock cart data
-    const cart = [
-        {
-            id: "prod-1",
-            name: "Fresh Apples",
-            price: 2.99,
-            quantity: 2,
-        },
-        {
-            id: "prod-2",
-            name: "Whole Wheat Bread",
-            price: 3.49,
-            quantity: 1,
-        }
-    ];
+    // Store hooks
+    const { user } = useAuthStore();
+    const { cart, cartTotal, shop, clearCart } = useCustomerStore();
 
-    const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-    const deliveryFee = 2.99;
-    const tax = cartTotal * 0.1; // 10% tax
+    // Calculate totals
+    const deliveryFee = deliveryOption === 'delivery' ? 2.99 : 0;
+    const tax = cartTotal * 0.05; // 5% tax
     const orderTotal = cartTotal + deliveryFee + tax;
 
-    const handleSubmit = (e) => {
+    // Check if user has verified contact info
+    useEffect(() => {
+        if (user?.email) {
+            setVerifiedContact({
+                type: 'email',
+                identifier: user.email,
+                verified: true
+            });
+        }
+    }, [user]);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // In a real app, this would process the payment
-        navigate(`/shop/${shopId}/confirmation`);
+
+        // Check if cart is empty
+        if (!cart || cart.length === 0) {
+            toast.error('Your cart is empty');
+            return;
+        }
+
+        // Check if contact is verified
+        if (!verifiedContact?.verified) {
+            setShowOTPVerification(true);
+            return;
+        }
+
+        await placeOrder();
+    };
+
+    const placeOrder = async () => {
+        setIsPlacingOrder(true);
+
+        try {
+            // Prepare order data
+            const orderData = {
+                shop_id: shopId,
+                customer_name: customerName.trim() || undefined,
+                items: cart.map(item => ({
+                    product_id: item._id,
+                    product_name: item.name,
+                    price: item.price,
+                    quantity: item.quantity
+                })),
+                subtotal: cartTotal,
+                tax_amount: tax,
+                total_amount: orderTotal,
+                notes: orderNotes.trim() || undefined
+            };
+
+            // Add verified contact info
+            if (verifiedContact.type === 'email') {
+                orderData.customer_email = verifiedContact.identifier;
+            } else {
+                orderData.customer_mobile = verifiedContact.identifier;
+            }
+
+            const result = await orderService.createOrder(orderData);
+
+            if (result.success) {
+                toast.success('Order placed successfully!');
+                clearCart();
+                navigate(`/customer/shop/${shopId}/order-confirmation`, {
+                    state: { orderData: result.data }
+                });
+            } else {
+                toast.error(result.data?.message || 'Failed to place order');
+            }
+        } catch (error) {
+            console.error('Error placing order:', error);
+            toast.error('Failed to place order. Please try again.');
+        } finally {
+            setIsPlacingOrder(false);
+        }
+    };
+
+    const handleOTPVerificationComplete = (contactInfo) => {
+        setVerifiedContact(contactInfo);
+        setShowOTPVerification(false);
+        // Automatically place order after verification
+        setTimeout(() => placeOrder(), 500);
+    };
+
+    const handleOTPVerificationCancel = () => {
+        setShowOTPVerification(false);
     };
 
     return (
@@ -121,7 +199,7 @@ export function CheckoutPage() {
                                                     <span>Delivery</span>
                                                 </div>
                                                 <span className="text-sm text-muted-foreground mt-2">
-                                                    ${deliveryFee.toFixed(2)} fee, arrives in 30-45 mins
+                                                    ₹{deliveryFee.toFixed(2)} fee, arrives in 30-45 mins
                                                 </span>
                                             </Label>
                                         </div>
@@ -144,52 +222,52 @@ export function CheckoutPage() {
                                 </CardContent>
                             </Card>
 
-                            {/* Delivery Details */}
-                            {deliveryOption === "delivery" && (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Delivery Details</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label htmlFor="firstName">First Name</Label>
-                                                <Input id="firstName" placeholder="John" required />
+                            {/* Customer Details */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Customer Details</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div>
+                                        <Label htmlFor="customerName">Name (Optional)</Label>
+                                        <Input 
+                                            id="customerName" 
+                                            placeholder="Your name" 
+                                            value={customerName}
+                                            onChange={(e) => setCustomerName(e.target.value)}
+                                        />
+                                    </div>
+                                    
+                                    {verifiedContact ? (
+                                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                            <div className="flex items-center gap-2 text-green-700">
+                                                <CheckCircle className="h-4 w-4" />
+                                                <span className="font-medium">Contact Verified</span>
                                             </div>
-                                            <div>
-                                                <Label htmlFor="lastName">Last Name</Label>
-                                                <Input id="lastName" placeholder="Doe" required />
-                                            </div>
+                                            <p className="text-sm text-green-600 mt-1">
+                                                {verifiedContact.type === 'email' ? 'Email: ' : 'Mobile: '}
+                                                {verifiedContact.identifier}
+                                            </p>
                                         </div>
-                                        <div>
-                                            <Label htmlFor="address">Address</Label>
-                                            <Input id="address" placeholder="123 Main St" required />
+                                    ) : (
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                            <p className="text-sm text-yellow-700">
+                                                You'll need to verify your email or mobile number before placing the order.
+                                            </p>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <Label htmlFor="city">City</Label>
-                                                <Input id="city" placeholder="Cityville" required />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="state">State</Label>
-                                                <Input id="state" placeholder="State" required />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="zip">ZIP Code</Label>
-                                                <Input id="zip" placeholder="12345" required />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="phone">Phone Number</Label>
-                                            <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" required />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
-                                            <Input id="instructions" placeholder="Gate code, leave at door, etc." />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
+                                    )}
+                                    
+                                    <div>
+                                        <Label htmlFor="orderNotes">Order Notes (Optional)</Label>
+                                        <Input 
+                                            id="orderNotes" 
+                                            placeholder="Special instructions, preferences, etc." 
+                                            value={orderNotes}
+                                            onChange={(e) => setOrderNotes(e.target.value)}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
 
                             {/* Payment Method */}
                             <Card>
@@ -287,33 +365,39 @@ export function CheckoutPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="space-y-2">
-                                        {cart.map(item => (
-                                            <div key={item.id} className="flex justify-between">
+                                        {cart && cart.length > 0 ? cart.map(item => (
+                                            <div key={item._id} className="flex justify-between">
                                                 <span className="text-muted-foreground">
                                                     {item.name} × {item.quantity}
                                                 </span>
-                                                <span>${(item.price * item.quantity).toFixed(2)}</span>
+                                                <span>₹{(item.price * item.quantity).toFixed(2)}</span>
                                             </div>
-                                        ))}
+                                        )) : (
+                                            <div className="text-center text-muted-foreground py-4">
+                                                Your cart is empty
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="border-t pt-2">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Subtotal</span>
-                                            <span>${cartTotal.toFixed(2)}</span>
+                                            <span>₹{cartTotal.toFixed(2)}</span>
                                         </div>
+                                        {deliveryFee > 0 && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Delivery Fee</span>
+                                                <span>₹{deliveryFee.toFixed(2)}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Delivery Fee</span>
-                                            <span>${deliveryFee.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Tax (10%)</span>
-                                            <span>${tax.toFixed(2)}</span>
+                                            <span className="text-muted-foreground">Tax (5%)</span>
+                                            <span>₹{tax.toFixed(2)}</span>
                                         </div>
                                     </div>
                                     <div className="border-t pt-4 mt-2">
                                         <div className="flex justify-between font-bold text-lg">
                                             <span>Total</span>
-                                            <span>${orderTotal.toFixed(2)}</span>
+                                            <span>₹{orderTotal.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -322,8 +406,18 @@ export function CheckoutPage() {
                                         type="submit"
                                         className="w-full"
                                         size="lg"
+                                        disabled={isPlacingOrder || !cart || cart.length === 0}
                                     >
-                                        Place Order <ChevronRight className="h-4 w-4 ml-2" />
+                                        {isPlacingOrder ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                Placing Order...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Place Order <ChevronRight className="h-4 w-4 ml-2" />
+                                            </>
+                                        )}
                                     </Button>
                                 </CardFooter>
                             </Card>
@@ -341,6 +435,16 @@ export function CheckoutPage() {
                 onOpenChange={setShowLoginPopup}
                 onSuccess={() => setIsLoggedIn(true)}
             />
+            
+            {/* OTP Verification Modal */}
+            {showOTPVerification && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <OTPVerification
+                        onVerificationComplete={handleOTPVerificationComplete}
+                        onCancel={handleOTPVerificationCancel}
+                    />
+                </div>
+            )}
         </div>
     );
 }
