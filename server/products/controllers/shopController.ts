@@ -41,7 +41,6 @@ export const getShopByCode = async (req: Request, res: Response) => {
             shop: {
                 _id: shopValidationResult.shop.id,
                 name: shopValidationResult.shop.name,
-                shop_code: shopValidationResult.shop.shop_code,
                 category_id: shopValidationResult.shop.category_id
             }
         });

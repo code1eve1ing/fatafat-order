@@ -11,6 +11,7 @@ class AuthService {
         const shopStore = useShopStore.getState();
         try {
             authStore.setLoading(true);
+            userData.email = userData.email || undefined;
             const response = await api.post('/auth/signup', userData);
             const { token, userId, shop } = response.data;
 

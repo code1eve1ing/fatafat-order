@@ -35,9 +35,6 @@ export const validateShopCode = async (call: any, callback: any) => {
         if (isObjectId) {
             // Find shop by _id
             shop = await Shop.findById(shop_code).populate('category_id');
-        } else {
-            // Find shop by shop_code
-            shop = await Shop.findOne({ shop_code }).populate('category_id');
         }
 
         if (!shop) {
@@ -55,7 +52,6 @@ export const validateShopCode = async (call: any, callback: any) => {
             shop: {
                 id: shop._id.toString(),
                 name: shop.name,
-                shop_code: shop.shop_code,
                 category_id: shop.category_id?._id?.toString() || shop.category_id?.toString(),
                 created_at: shop.createdAt?.toISOString() || '',
                 updated_at: shop.updatedAt?.toISOString() || ''

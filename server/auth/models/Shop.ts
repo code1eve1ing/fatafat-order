@@ -3,7 +3,6 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IShop extends Document {
     name: string;
     category_id: mongoose.Types.ObjectId;
-    shop_code: string;
 }
 
 const shopSchema: Schema = new Schema({
@@ -17,13 +16,6 @@ const shopSchema: Schema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Category',
         required: [true, 'Shop category is required']
-    },
-    shop_code: {
-        type: String,
-        required: [true, 'Shop code is required'],
-        unique: true,
-        trim: true,
-        maxlength: [20, 'Shop code cannot exceed 20 characters']
     }
 }, {
     timestamps: false
