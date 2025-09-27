@@ -75,6 +75,6 @@ export function ShopDataWrapper({ children }) {
             </div>
         );
     }
-
-    return children;
+    // extra spacing for bottom of the page due to chat icon 
+    return <div className='mb-16'>{children}</div>;
 }
