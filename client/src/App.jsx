@@ -8,6 +8,7 @@ import { OrdersPage } from "./module/shopkeeper/order/page";
 import { ProductsPage } from "./module/shopkeeper/product/page";
 import { ShopOnboardingPage } from "./module/shopkeeper/onboarding/page";
 import { NearbyShopsPage } from "./module/customer/NearbyShops/page";
+import { ShopsPage } from "./module/customer/shops/page";
 import { ShopPage } from "./module/customer/shop/page";
 import { CartPage } from "./module/customer/cart/page";
 import { CheckoutPage } from "./module/customer/checkout/page";
@@ -84,6 +85,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
 
             {/* Customer Routes */}
+            <Route path="/shops" element={<ShopsPage />} />
             <Route path="/customer/nearby-shops" element={<NearbyShopsPage />} />
             {/* TODO: shop login/registration reminder popup & view cart floaring icon  */}
             <Route path="/customer/shop/:shopId" element={<ShopDataWrapper><ShopPage /></ShopDataWrapper>} />

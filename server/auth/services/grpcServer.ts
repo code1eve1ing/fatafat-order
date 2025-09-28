@@ -2,6 +2,8 @@ import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
 import path from 'path';
 import Shop from '../models/Shop';
+import District from '../models/District';
+import City from '../models/City';
 
 // Load the proto file
 const PROTO_PATH = path.join(__dirname, '../../shared/proto/shop.proto');
@@ -67,6 +69,104 @@ export const validateShopCode = async (call: any, callback: any) => {
     }
 };
 
+// Implement ListShops with pagination and filters
+export const listShops = async (call: any, callback: any) => {
+    try {
+        const {
+            page = 1,
+            limit = 20,
+            name = '',
+            category_id = '',
+            district_id = '',
+            city_id = '',
+            state_id = '',
+        } = call.request || {};
+
+        const pageNum = Math.max(1, Number(page) || 1);
+        const pageSize = Math.min(100, Math.max(1, Number(limit) || 20));
+
+        // Build base filter
+        const filter: any = {};
+
+        if (name) {
+            filter.name = { $regex: new RegExp(name, 'i') };
+        }
+        if (category_id) {
+            filter.category_id = category_id;
+        }
+
+        // Resolve district filter based on district/city/state ids
+        let districtIds: string[] = [];
+        
+        try {
+            if (district_id) {
+                districtIds = [district_id];
+            } else if (city_id) {
+                const districts = await District.find({ cityId: city_id }).select('_id').lean();
+                districtIds = districts.map((d) => d._id.toString());
+            } else if (state_id) {
+                const cities = await City.find({ stateId: state_id }).select('_id').lean();
+                const cityIds = cities.map((c) => c._id.toString());
+                if (cityIds.length > 0) {
+                    const districts = await District.find({ cityId: { $in: cityIds } }).select('_id').lean();
+                    districtIds = districts.map((d) => d._id.toString());
+                }
+            }
+            
+            if (districtIds.length > 0) {
+                filter.district_id = { $in: districtIds };
+            }
+        } catch (error) {
+            console.error('Error resolving district filters:', error);
+            // Continue with empty district filter if there's an error
+        }
+
+        const total = await Shop.countDocuments(filter);
+
+        const shops = await Shop.find(filter)
+            .sort({ _id: -1 })
+            .skip((pageNum - 1) * pageSize)
+            .limit(pageSize)
+            .populate('category_id')
+            .populate({
+                path: 'district_id',
+                populate: {
+                    path: 'cityId',
+                    populate: {
+                        path: 'stateId'
+                    }
+                }
+            });
+
+        const mapped = shops.map((s: any) => {
+            const district: any = s.district_id || {};
+            const city: any = district?.cityId || {};
+            const state: any = city?.stateId || {};
+            const category: any = s.category_id || {};
+            return {
+                id: s._id.toString(),
+                name: s.name,
+                shop_code: s.shop_code || '',
+                category_id: category?._id?.toString() || '',
+                created_at: s.createdAt?.toISOString?.() || '',
+                updated_at: s.updatedAt?.toISOString?.() || '',
+                category_name: category?.name || '',
+                district_id: district?._id?.toString() || '',
+                district_name: district?.name || '',
+                city_id: city?._id?.toString() || '',
+                city_name: city?.name || '',
+                state_id: state?._id?.toString() || '',
+                state_name: state?.name || '',
+            };
+        });
+
+        callback(null, { shops: mapped, total, page: pageNum, limit: pageSize });
+    } catch (error) {
+        console.error('gRPC ListShops error:', error);
+        callback(error);
+    }
+};
+
 // Create and start gRPC server
 export const startGrpcServer = () => {
     const server = new grpc.Server();
@@ -74,6 +174,7 @@ export const startGrpcServer = () => {
     // Add the service implementation
     server.addService(shopProto.ShopService.service, {
         ValidateShopCode: validateShopCode,
+        ListShops: listShops,
     });
 
     const port = process.env.GRPC_PORT || '50051';

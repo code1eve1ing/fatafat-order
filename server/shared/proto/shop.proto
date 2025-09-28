@@ -6,6 +6,8 @@ package shop;
 service ShopService {
   // Validate shop code and return shop details
   rpc ValidateShopCode(ValidateShopCodeRequest) returns (ValidateShopCodeResponse);
+  // List shops with pagination and optional filters
+  rpc ListShops(ListShopsRequest) returns (ListShopsResponse);
 }
 
 // Request message for validating shop code
@@ -28,4 +30,34 @@ message Shop {
   string category_id = 4;
   string created_at = 5;
   string updated_at = 6;
+  // Enriched fields for listing
+  string category_name = 7;
+  string district_id = 8;
+  string district_name = 9;
+  string city_id = 10;
+  string city_name = 11;
+  string state_id = 12;
+  string state_name = 13;
+}
+
+// Request for listing shops
+message ListShopsRequest {
+  // Pagination
+  int32 page = 1;         // 1-based page number
+  int32 limit = 2;        // items per page (default 20)
+  
+  // Filters (all optional)
+  string name = 3;        // substring match (case-insensitive)
+  string category_id = 4; 
+  string district_id = 5; 
+  string city_id = 6;     // derived from district.dityId
+  string state_id = 7;    // derived from district.cityId.stateId
+}
+
+// Response for listing shops
+message ListShopsResponse {
+  repeated Shop shops = 1;
+  int32 total = 2;        // total items matching filters
+  int32 page = 3;         // current page
+  int32 limit = 4;        // page size
 }
