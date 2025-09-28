@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IShop extends Document {
     name: string;
     category_id: mongoose.Types.ObjectId;
+    district_id: mongoose.Types.ObjectId;
 }
 
 const shopSchema: Schema = new Schema({
@@ -16,6 +17,11 @@ const shopSchema: Schema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Category',
         required: [true, 'Shop category is required']
+    },
+    district_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'District',
+        required: [true, 'District is required']
     }
 }, {
     timestamps: false

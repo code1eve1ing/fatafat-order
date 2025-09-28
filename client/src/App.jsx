@@ -17,6 +17,7 @@ import { ContactPage, PrivacyPolicyPage, RefundPolicyPage, TermsConditionsPage }
 import { Toaster } from 'react-hot-toast';
 import InitialRouteHandler from "./components/wrappers/InitialRouteHandler";
 import { CategoriesPage } from "./module/admin/category/page";
+import { AreaPage } from "./module/admin/area/page";
 import InitialDataLoader from "./components/common/InitialDataLoader";
 import ShopkeeperManager from "./module/shopkeeper/wrappers/ShopkeeperManager";
 import StateViewer from "./components/common/StateViewer";
@@ -106,6 +107,7 @@ function App() {
 
             {/* Admin Pages  */}
             <Route path="/admin/categories" element={<CategoriesPage />} />
+            <Route path="/admin/area" element={<AreaPage />} />
 
             {/* 404 Fallback (optional) */}
             <Route path="*" element={<h1>404 - Page Not Found</h1>} />

@@ -74,3 +74,54 @@ export const validateCategoryId = [
         .isMongoId()
         .withMessage('Invalid category ID format')
 ];
+
+// State validation
+export const validateState = [
+    body('name')
+        .trim()
+        .notEmpty()
+        .withMessage('State name is required')
+        .isLength({ max: 100 })
+        .withMessage('State name cannot exceed 100 characters'),
+    body('code')
+        .trim()
+        .notEmpty()
+        .withMessage('State code is required')
+        .isLength({ max: 10 })
+        .withMessage('State code cannot exceed 10 characters')
+        .matches(/^[A-Z0-9]+$/)
+        .withMessage('State code must contain only uppercase letters and numbers')
+];
+
+// City validation
+export const validateCity = [
+    body('name')
+        .trim()
+        .notEmpty()
+        .withMessage('City name is required')
+        .isLength({ max: 100 })
+        .withMessage('City name cannot exceed 100 characters'),
+    body('stateId')
+        .isMongoId()
+        .withMessage('Invalid state ID format')
+];
+
+// District validation
+export const validateDistrict = [
+    body('name')
+        .trim()
+        .notEmpty()
+        .withMessage('District name is required')
+        .isLength({ max: 100 })
+        .withMessage('District name cannot exceed 100 characters'),
+    body('cityId')
+        .isMongoId()
+        .withMessage('Invalid city ID format')
+];
+
+// ID validation for area endpoints
+export const validateAreaId = [
+    param('id')
+        .isMongoId()
+        .withMessage('Invalid ID format')
+];

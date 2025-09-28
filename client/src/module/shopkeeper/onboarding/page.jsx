@@ -49,12 +49,14 @@ import {
 import { useSearchParams, useNavigate } from "react-router-dom";
 import useAuth from "@/hooks/useAuth";
 import useShopStore from "@/store/shop";
+import { useArea } from "@/hooks/useArea";
 
 // Validation schema
 const formSchema = z.object({
   shop_name: z.string().min(1, "Shop name is required"),
   shop_owner_name: z.string().min(1, "Owner name is required"),
   shop_category: z.string().min(1, "Shop category is required"),
+  district: z.string().min(1, "District is required"),
   mobile: z
     .string()
     .min(10, "Mobile must be 10 digits")
@@ -83,9 +85,11 @@ export function ShopOnboardingPage() {
   const redirectFrom = searchParams.get("redirect-from");
   const [billingPeriod, setBillingPeriod] = useState("monthly");
   const [selectedSubscriptionPlan, setSelectedSubscriptionPlan] = useState(null);
+  const [districtSearch, setDistrictSearch] = useState("");
   const { categories } = useShopStore();
   const { signup, loading } = useAuth();
-
+  const { allAreas } = useArea();
+  console.log("allAreas", allAreas)
   const navigate = useNavigate();
 
   const form = useForm({
@@ -94,6 +98,7 @@ export function ShopOnboardingPage() {
     defaultValues: {
       email: "",
       shop_category: "",
+      district: "",
       mobile: "",
       password: "",
       confirm_password: "",
@@ -224,6 +229,7 @@ export function ShopOnboardingPage() {
         user_name: formData.shop_owner_name,
         shop_name: formData.shop_name,
         shop_category_id: formData.shop_category,
+        district_id: formData.district,
         mobile: formData.mobile,
         email: formData.email,
         password: formData.password
@@ -362,6 +368,58 @@ export function ShopOnboardingPage() {
                                   {category.name}
                                 </SelectItem>
                               ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="district"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>District</FormLabel>
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              handleInputChange("district")();
+                              trigger("district");
+                            }}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select district" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <div className="p-2">
+                                <Input
+                                  placeholder="Search districts..."
+                                  value={districtSearch}
+                                  onChange={(e) => setDistrictSearch(e.target.value)}
+                                  className="mb-2"
+                                />
+                              </div>
+                              {allAreas
+                                ?.filter((district) =>
+                                  district.name
+                                    ?.toLowerCase()
+                                    .includes(districtSearch.toLowerCase()) ||
+                                  district.cityId?.name
+                                    ?.toLowerCase()
+                                    .includes(districtSearch.toLowerCase()) ||
+                                  district.cityId?.stateId?.name
+                                    ?.toLowerCase()
+                                    .includes(districtSearch.toLowerCase())
+                                )
+                                .map((district) => (
+                                  <SelectItem key={district._id} value={district._id}>
+                                    {district.name} → {district.cityId?.name} → {district.cityId?.stateId?.name}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />

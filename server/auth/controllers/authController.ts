@@ -21,7 +21,7 @@ export const signup = async (req: Request, res: Response) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { mobile, email, password, user_name, shop_name, shop_category_id } = req.body;
+        const { mobile, email, password, user_name, shop_name, shop_category_id, district_id } = req.body;
 
         // 1. Check if user already exists with same mobile or email
         const query: any[] = [{ mobile }]
@@ -35,9 +35,13 @@ export const signup = async (req: Request, res: Response) => {
             return res.status(400).json({ message: `User already exists with this ${conflictField}` });
         }
 
+        console.log("shop_name", shop_name)
+        console.log("shop_category_id", shop_category_id)
+        console.log("district_id", district_id)
         const shop = new Shop({
             name: shop_name,
             category_id: shop_category_id,
+            district_id,
         });
 
         await shop.save();
